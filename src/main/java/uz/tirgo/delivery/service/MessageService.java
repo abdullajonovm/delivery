@@ -19,19 +19,6 @@ public class MessageService {
 
     private final ContactService contactService;
 
-    public void save(Messages messages) {
-        messageRepository.save(messages);
-    }
-
-    public boolean save(Message message, Order order) {
-        String chatId = String.valueOf(message.getChatId());
-        Optional<Seller> byChatId = userRepository.findByChatId(chatId);
-        Messages messages = new Messages(order, message);
-        messages.setFrom(byChatId.get());
-        messageRepository.save(messages);
-
-        return true;
-    }
 
     public Boolean saveContact(Message message, Order order) {
         String chatId = String.valueOf(message.getChatId());
@@ -43,6 +30,22 @@ public class MessageService {
         messageRepository.save(messages);
         return true;
     }
+
+    public void save(Messages messages) {
+        messageRepository.save(messages);
+    }
+
+
+    public boolean save(Message message, Order order) {
+        String chatId = String.valueOf(message.getChatId());
+        Optional<Seller> byChatId = userRepository.findByChatId(chatId);
+        Messages messages = new Messages(order, message);
+        messages.setFrom(byChatId.get());
+        messageRepository.save(messages);
+
+        return true;
+    }
+
 
     public void save(Message message, Order order, String path) {
         String chatId = String.valueOf(message.getChatId());

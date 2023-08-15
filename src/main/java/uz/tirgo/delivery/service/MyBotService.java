@@ -39,7 +39,18 @@ public class MyBotService {
 
     public boolean currentLanguage = false;
 
+    public boolean saveUser(Message message) {
+        if (message.getChatId().equals(message.getContact().getUserId())) {
+            userSevice.addUser(message);
+            return true;
+        }
+        messageService.saveContact(message, orderService.findByChatId(String.valueOf(message.getChatId())));
+        return false;
+    }
+
+
     public SendMessage contact(Message message) {
+        setCurrentLanguage(message.getChatId());
         Order order = orderService.findByChatId(String.valueOf(message.getChatId()));
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
@@ -49,6 +60,7 @@ public class MyBotService {
     }
 
     public List<SendMessage> myAllOrders(Message message) {
+        setCurrentLanguage(message.getChatId());
         String chatId = String.valueOf(message.getChatId());
         List<SendMessage> sendMessageList = new ArrayList<>();
         for (Order order : orderService.myAllOrders(chatId)) {
@@ -85,6 +97,8 @@ public class MyBotService {
     }
 
     public SendMessage newOrder(Message message) {
+        setCurrentLanguage(message.getChatId());
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         if (!userSevice.existsByChatId(String.valueOf(message.getChatId()))) {
@@ -97,6 +111,8 @@ public class MyBotService {
     }
 
     public SendMessage text(Message message) {
+        setCurrentLanguage(message.getChatId());
+
         SendMessage sendMessage = new SendMessage();
         String chatId = String.valueOf(message.getChatId());
         sendMessage.setChatId(chatId);
@@ -116,6 +132,7 @@ public class MyBotService {
     }
 
     public SendMessage closeOrder(Message message) {
+        setCurrentLanguage(message.getChatId());
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
 
@@ -127,6 +144,7 @@ public class MyBotService {
     }
 
     public SendMessage saveOrder(Message message) {
+        setCurrentLanguage(message.getChatId());
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
@@ -138,27 +156,6 @@ public class MyBotService {
         return sendMessage;
     }
 
-    public SendMessage saveUser(Message message) {
-        SendMessage sendMessage = new SendMessage();
-        if (userSevice.existsByChatId(String.valueOf(message.getChatId()))) {
-            sendMessage.setChatId(String.valueOf(message.getChatId()));
-            if (message.getChatId().equals(message.getContact().getUserId())) {
-                userSevice.editUser(message.getChatId(), message.getContact());
-                boolean language = userSevice.getLanguage(message.getChatId());
-                sendMessage.setText(language ? KeyWords.HELLO_RUS : KeyWords.HELLO_UZB);
-
-            } else {
-                contact(message);
-                return null;
-            }
-        } else {
-            userSevice.addUser(message);
-            boolean language = userSevice.getLanguage(message.getChatId());
-            sendMessage.setText(language ? KeyWords.HELLO_RUS : KeyWords.HELLO_UZB);
-        }
-
-        return sendMessage;
-    }
 
     public Boolean video(Message message, String path) {
         Order byChatId = orderService.findByChatId(String.valueOf(message.getChatId()));
@@ -181,7 +178,7 @@ public class MyBotService {
         location = locationRepository.save(location);
         messageService.addLocation(message, byChatId, location);
         if (KeyWords.lastRequestSeller.get(message.getChatId()).equals("INPUT_SELLER_LOCATION")) {
-           orderService.setSellerPoint(message, location);
+            orderService.setSellerPoint(message, location);
         }
     }
 
@@ -190,26 +187,9 @@ public class MyBotService {
         return callbackQueryService.callBackQuery(callbackQuery);
     }
 
-    public void saveUser(Message message, Boolean language) {
-        if (userSevice.existsByChatId(String.valueOf(message.getChatId()))) {
-            userSevice.editUser(message, language);
-        } else {
-            userSevice.addUser(message, language);
-        }
-    }
-
-    public Boolean currentLanguage(String chatId) {
-        if (userSevice.existsByChatId(chatId)) {
-            Seller seller = userSevice.finByChatId(chatId);
-            this.currentLanguage = seller.getLanguage().equals(Language.RUS);
-            return seller.getLanguage().equals(Language.RUS);
-        } else {
-            return false;
-        }
-    }
-
-
     public SendMessage acceptedOrder(Message message) {
+        setCurrentLanguage(message.getChatId());
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setText(this.currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
@@ -232,15 +212,17 @@ public class MyBotService {
     }
 
     public SendMessage chekOrderSize(Message message) {
+        setCurrentLanguage(message.getChatId());
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
-        sendMessage.setText(this.currentLanguage ? KeyWords.Warning_ORDER_RUS : KeyWords.Warning_ORDER_UZB);
+        sendMessage.setText(currentLanguage ? KeyWords.Warning_ORDER_RUS : KeyWords.Warning_ORDER_UZB);
 
         KeyboardButton keyboardButton = new KeyboardButton();
-        keyboardButton.setText(this.currentLanguage ? KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_RUS : KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_UZB);
+        keyboardButton.setText(currentLanguage ? KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_RUS : KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_UZB);
 
         KeyboardButton keyboardButton1 = new KeyboardButton();
-        keyboardButton1.setText(this.currentLanguage ? KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS : KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB);
+        keyboardButton1.setText(currentLanguage ? KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS : KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB);
 
         KeyboardRow keyboardRow = new KeyboardRow();
         keyboardRow.add(keyboardButton);
@@ -254,13 +236,19 @@ public class MyBotService {
     }
 
     public SendMessage acceptedSupplierOrder(Message message) {
+        setCurrentLanguage(message.getChatId());
+
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         if (orderService.acceptedSupplierOrder(message)) {
-            sendMessage.setText(this.currentLanguage ? "Ваш заказ был размещен. Пожалуйста, доставьте заказ быстро и в хорошем качестве." : "Buyurtma sizga berildi. Iltimos byurtmani tez va sifatli yetkazib bering.");
+            sendMessage.setText(currentLanguage ? "Ваш заказ был размещен. Пожалуйста, доставьте заказ быстро и в хорошем качестве." : "Buyurtma sizga berildi. Iltimos byurtmani tez va sifatli yetkazib bering.");
         } else {
             sendMessage.setText(this.currentLanguage ? "Заказ Вам не был отправлен. Будьте более активны" : "Buyurtma sizga yo'naltirilmadi. Ilimos faolroq bo'ling");
         }
         return sendMessage;
+    }
+
+    public void setCurrentLanguage(Long chatId) {
+        currentLanguage = KeyWords.userLanguage.get(chatId);
     }
 }

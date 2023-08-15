@@ -57,6 +57,8 @@ public class SellerBot extends TelegramLongPollingBot {
             sendMessage(sendMessage);
         } else {
             chatId = String.valueOf(message.getChatId());
+            System.out.println("KeyWords.userLanguage.get(message.getChatId()) = " + KeyWords.userLanguage.get(message.getChatId()));
+            System.out.println("KeyWords.userLanguage.get(message.getChatId()) = " + KeyWords.userLanguage.get(message.getChatId()));
             if (KeyWords.userLanguage.get(message.getChatId()) != null && KeyWords.userLanguage.get(message.getChatId())) {
                 currentLanguage = true;
             }
@@ -65,35 +67,25 @@ public class SellerBot extends TelegramLongPollingBot {
 
                 if (message.getText().equals("/start")) {
                     start(message);
-                } else if (message.getText().equals(KeyWords.LANGUAGE_RUS) || message.getText().equals(KeyWords.LANGUAGE_UZB)) {
                 } else {
                     text(message);
                 }
             } else if (message.hasContact()) {
-                SendMessage sendMessage1 = myBotService.saveUser(message);
-                if (sendMessage1 == null) {
-                    sendMessage1 = new SendMessage();
-                    sendMessage1.setChatId(String.valueOf(message.getChatId()));
-                    sendMessage1.setText(this.currentLanguage ? KeyWords.ADD_INFO_RUS : KeyWords.ADD_INFO_UZB);
-                    sendMessage(sendMessage1);
-                } else {
-                    sendMessage(sendMessage1);
-                    menyu(String.valueOf(message.getChatId()));
-                }
+                contact(message);
+            } else if (message.hasLocation()) {
+                myBotService.location(message);
+                sendMessage(new SendMessage(String.valueOf(message.getChatId()), ADD_INFO));
             } else if (message.hasVideo()) {
-
                 video(message);
                 sendMessage(new SendMessage(String.valueOf(message.getChatId()), ADD_INFO));
             } else if (message.hasPhoto()) {
                 photo(message);
                 sendMessage(new SendMessage(String.valueOf(message.getChatId()), ADD_INFO));
-            } else if (message.hasLocation()) {
-                myBotService.location(message);
-                sendMessage(new SendMessage(String.valueOf(message.getChatId()), ADD_INFO));
             }
         }
 
     }
+
 
     private void photo(Message message) {
 
@@ -155,34 +147,6 @@ public class SellerBot extends TelegramLongPollingBot {
         }
     }
 
-    private void menyu(String chatId) {
-        KeyboardButton keyboardButton = new KeyboardButton();
-
-        KeyboardButton keyboardButton1 = new KeyboardButton();
-        if (this.currentLanguage) {
-            keyboardButton.setText(KeyWords.MY_ORDERS_RUS);
-            keyboardButton1.setText(KeyWords.NEW_ORDER_RUS);
-        } else {
-            keyboardButton.setText(KeyWords.MY_ORDERS_UZB);
-            keyboardButton1.setText(KeyWords.NEW_ORDER_UZB);
-        }
-
-
-        KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRow.add(keyboardButton);
-        keyboardRow.add(keyboardButton1);
-
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setSelective(true);
-        replyKeyboardMarkup.setKeyboard(Collections.singletonList(keyboardRow));
-
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        sendMessage.setText(this.currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
-        sendMessage(sendMessage);
-    }
 
     private void saveVideoToFile(String fileUrl, String fileName) throws IOException {
         try (InputStream inputStream = new URL(fileUrl).openStream();
@@ -227,21 +191,16 @@ public class SellerBot extends TelegramLongPollingBot {
             case KeyWords.LANGUAGE_RUS, KeyWords.LANGUAGE_UZB -> inputContat(message);
 
 //            Custmoerning buyurtmalarini ko'rish
-            case KeyWords.MY_ORDERS_RUS, KeyWords.MY_ORDERS_UZB -> {
-                for (SendMessage sendMessage : myBotService.myAllOrders(message)) {
-                    sendMessage(sendMessage);
-                }
-            }
+            case KeyWords.MY_ORDERS_RUS, KeyWords.MY_ORDERS_UZB -> myOrders();
 //            Yangi buyurtma yaratish
-            case KeyWords.NEW_ORDER_RUS, KeyWords.NEW_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.chekOrderSize(message);
-                sendMessage(sendMessage);
-            }
+            case KeyWords.NEW_ORDER_RUS, KeyWords.NEW_ORDER_UZB -> creteOrder(message);
+            case KeyWords.MY_IN_PROGRESS_ORDERS_RUS, KeyWords.MY_TAKING_AWAY_ORDERS_RUS, KeyWords.MY_COMPLETE_ORDERS_RUS, KeyWords.MY_IN_PROGRESS_ORDERS_UZB, KeyWords.MY_TAKING_AWAY_ORDERS_UZB, KeyWords.MY_COMPLETE_ORDERS_UZB ->
+                    myOrders(message);
 //            Yaratayotgan buyurtmasini bekor qilish
             case KeyWords.CLOSE_ORDER_RUS, KeyWords.CLOSE_ORDER_UZB -> {
                 SendMessage sendMessage = myBotService.closeOrder(message);
                 sendMessage(sendMessage);
-                menyu(String.valueOf(message.getChatId()));
+                menu();
             }
             case KeyWords.SAVE_ORDER_RUS, KeyWords.SAVE_ORDER_UZB -> {
                 SendMessage sendMessage = myBotService.acceptedOrder(message);
@@ -250,7 +209,7 @@ public class SellerBot extends TelegramLongPollingBot {
             case KeyWords.CONFIRMATION_ORDER_RUS, KeyWords.CONFIRMATION_ORDER_UZB -> {
                 SendMessage sendMessage = myBotService.saveOrder(message);
                 sendMessage(sendMessage);
-                menyu(String.valueOf(message.getChatId()));
+                menu();
             }
             case KeyWords.GO_BACK_RUS, KeyWords.GO_BACK_UZB -> {
                 newOrder(String.valueOf(message.getChatId()));
@@ -262,7 +221,7 @@ public class SellerBot extends TelegramLongPollingBot {
 
             }
             case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> {
-                menyu(String.valueOf(message.getChatId()));
+                menu();
             }
             case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
                 SendMessage sendMessage = myBotService.acceptedSupplierOrder(message);
@@ -273,15 +232,23 @@ public class SellerBot extends TelegramLongPollingBot {
 
     }
 
+
+    private void creteOrder(Message message) {
+        SendMessage sendMessage = myBotService.chekOrderSize(message);
+        sendMessage(sendMessage);
+    }
+
+
     private void inputSelerPoint() {
 
         KeyboardButton keyboardButton = new KeyboardButton();
         keyboardButton.setText(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_MESSAGE_RUS : KeyWords.INPUT_SELLER_LOCATION_MESSAGE_UZB);
 
-        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "INPUT_SELLER_LOCATION");
+        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "inputSelerPoint");
 
         KeyboardButton keyboardButton1 = new KeyboardButton();
-        keyboardButton1.setText(currentLanguage ? "Нажмите на кнопку или поделитесь своим местоположением, войдя в меню телеграммы \uD83D\uDD79" : "Tugmaning ustiga bosing yoki, telegram menyusiga kirib joylashuvingizni ulashing \uD83D\uDD79");
+        keyboardButton1.setText(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_RUS : KeyWords.INPUT_SELLER_LOCATION_UZB);
+        keyboardButton1.setRequestLocation(true);
         KeyboardRow keyboardRow = new KeyboardRow();
         KeyboardRow keyboardRow1 = new KeyboardRow();
 
@@ -389,7 +356,7 @@ public class SellerBot extends TelegramLongPollingBot {
         currentLanguage = message.getText().equals(KeyWords.LANGUAGE_RUS);
 //        sellerning javob qaytadigon tilni saqlash
         KeyWords.userLanguage.put(message.getChatId(), currentLanguage);
-        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), KeyWords.CONTACT_INPUT_UZB);
+        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "inputContat");
 
         KeyboardButton keyboardButton = new KeyboardButton();
         keyboardButton.setRequestContact(true);
@@ -409,4 +376,85 @@ public class SellerBot extends TelegramLongPollingBot {
         sendMessage.setText(this.currentLanguage ? KeyWords.CONTACT_INPUT_RUS : KeyWords.CONTACT_INPUT_UZB);
         sendMessage(sendMessage);
     }
+
+    // 4) Kontakt yuborilgan bo'lsa
+    private void contact(Message message) {
+        boolean saveSeller = myBotService.saveUser(message);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        if (saveSeller) {
+            sendMessage.setText(currentLanguage ? KeyWords.HELLO_RUS : KeyWords.HELLO_UZB);
+            sendMessage(sendMessage);
+            menu();
+        } else {
+            sendMessage.setText(currentLanguage ? KeyWords.ADD_INFO_RUS : KeyWords.ADD_INFO_UZB);
+            sendMessage(sendMessage);
+        }
+    }
+
+    // 5) menu
+    private void menu() {
+        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "menu");
+
+        KeyboardButton keyboardButton = new KeyboardButton();
+
+        KeyboardButton keyboardButton1 = new KeyboardButton();
+        if (currentLanguage) {
+            keyboardButton.setText(KeyWords.MY_ORDERS_RUS);
+            keyboardButton1.setText(KeyWords.NEW_ORDER_RUS);
+        } else {
+            keyboardButton.setText(KeyWords.MY_ORDERS_UZB);
+            keyboardButton1.setText(KeyWords.NEW_ORDER_UZB);
+        }
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add(keyboardButton);
+        keyboardRow.add(keyboardButton1);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setKeyboard(Collections.singletonList(keyboardRow));
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        sendMessage.setText(currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
+        sendMessage(sendMessage);
+    }
+
+    // 6) seller orders
+    private void myOrders() {
+        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "myOrders");
+        KeyboardButton keyboardButton = new KeyboardButton();
+        KeyboardButton keyboardButton1 = new KeyboardButton();
+        KeyboardButton keyboardButton2 = new KeyboardButton();
+        if (currentLanguage) {
+            keyboardButton.setText(KeyWords.MY_IN_PROGRESS_ORDERS_RUS);
+            keyboardButton1.setText(KeyWords.MY_TAKING_AWAY_ORDERS_RUS);
+            keyboardButton2.setText(KeyWords.MY_COMPLETE_ORDERS_RUS);
+        } else {
+            keyboardButton.setText(KeyWords.MY_IN_PROGRESS_ORDERS_UZB);
+            keyboardButton1.setText(KeyWords.MY_TAKING_AWAY_ORDERS_UZB);
+            keyboardButton2.setText(KeyWords.MY_COMPLETE_ORDERS_UZB);
+        }
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add(keyboardButton);
+        keyboardRow.add(keyboardButton1);
+        KeyboardRow keyboardRow1 = new KeyboardRow();
+        keyboardRow1.add(keyboardButton2);
+        List<KeyboardRow> keyboardRowList = new ArrayList<>();
+        keyboardRowList.add(keyboardRow);
+        keyboardRowList.add(keyboardRow1);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setReplyMarkup(new ReplyKeyboardMarkup(keyboardRowList, true, true, true, null));
+        sendMessage.setText(currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
+        sendMessage(sendMessage);
+    }
+
+    // 7) seller orders
+    private void myOrders(Message message) {
+
+    }
+
 }

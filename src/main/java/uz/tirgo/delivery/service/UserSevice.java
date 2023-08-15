@@ -20,6 +20,19 @@ public class UserSevice {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
+    public void addUser(Message message) {
+        Seller seller;
+        if (userRepository.existsByChatId(String.valueOf(message.getChatId()))) {
+            Optional<Seller> byChatId = userRepository.findByChatId(String.valueOf(message.getChatId()));
+            seller = byChatId.get();
+            seller.setLastName(message.getContact().getLastName());
+            seller.setFirstName(message.getContact().getFirstName());
+            seller.setPhoneNumber(message.getContact().getPhoneNumber());
+        } else {
+            seller = new Seller(message);
+        }
+        userRepository.save(seller);
+    }
 
     public boolean existsByChatId(String chatId) {
         return userRepository.existsByChatId(chatId);
@@ -34,12 +47,6 @@ public class UserSevice {
         return byId.get().getChatId();
     }
 
-    public void addUser(Message message) {
-        Seller seller = new Seller(message);
-        Optional<Role> byName = roleRepository.findByName(RoleEnum.CUSTOMER);
-        seller.setRoles(byName.get());
-        userRepository.save(seller);
-    }
 
     public Seller finById(Long supplierId) {
         Optional<Seller> byId = userRepository.findById(supplierId);

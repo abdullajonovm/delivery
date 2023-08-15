@@ -5,6 +5,7 @@ import java.util.HashMap;
 public interface KeyWords {
 
     HashMap<Long, Boolean> userLanguage = new HashMap<>();
+    HashMap<Long, Boolean> customerLanguage = new HashMap<>();
     HashMap<Long, String> lastRequestSupplier = new HashMap<>();
     HashMap<Long, String> lastRequestSeller = new HashMap<>();
     String LANGUAGE_RUS = "Русский \uD83C\uDDF7\uD83C\uDDFA",
@@ -60,7 +61,16 @@ public interface KeyWords {
             SUBMIT_LOACTION_RUS = "Отправьте свое местоположение",
             SUBMIT_LOACTION_UZB = "Lokatsiyangizni yuboring",
             INPUT_SELLER_LOCATION_MESSAGE_RUS = "Ввод в письменной форме ✍️",
-            INPUT_SELLER_LOCATION_MESSAGE_UZB = "Yozma shaklda kiritish ✍️";
+            INPUT_SELLER_LOCATION_MESSAGE_UZB = "Yozma shaklda kiritish ✍️",
+            INPUT_SELLER_LOCATION_RUS = "Tugmasini bosing",
+            INPUT_SELLER_LOCATION_UZB = "Нажать на кнопку",
+
+            MY_IN_PROGRESS_ORDERS_RUS = "Мои активные заказы",
+            MY_IN_PROGRESS_ORDERS_UZB = "Mening faol buyurtmalarim",
+            MY_TAKING_AWAY_ORDERS_RUS = "Заказы, принятые моим поставщиком",
+            MY_TAKING_AWAY_ORDERS_UZB = "Yetkazib beruvchi qabul qilgan buyurtmalarim",
+            MY_COMPLETE_ORDERS_RUS = "Мои доставленные заказы",
+            MY_COMPLETE_ORDERS_UZB = "Mening yetkazib berilgan buyurtmalarim";
 
 
 }
