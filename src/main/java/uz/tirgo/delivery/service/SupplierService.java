@@ -40,9 +40,9 @@ public class SupplierService {
         var order = orderService.existOrderById(orderId);
         Seller seller = userSevice.finById(supplierId);
 
-        this.language = seller.getLanguage().equals(Language.RUS);
+       language = KeyWords.supplierLanguage.get(supplierId) != null && KeyWords.supplierLanguage.get(supplierId);
 
-        var supplierChatId = userSevice.finByChatId(supplierId);
+        String supplierChatId = String.valueOf(supplierId);
 
         sellerBot.sendMessage(new SendMessage(supplierChatId, language ? KeyWords.CONFIRM_ORDER_RESPONSE_RUS : KeyWords.CONFIRM_ORDER_RESPONSE_UZB));
         if (!order)

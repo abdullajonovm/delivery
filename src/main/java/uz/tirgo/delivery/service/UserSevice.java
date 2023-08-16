@@ -2,84 +2,36 @@ package uz.tirgo.delivery.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import uz.tirgo.delivery.entity.Role;
 import uz.tirgo.delivery.entity.Seller;
-import uz.tirgo.delivery.entity.enums.Language;
-import uz.tirgo.delivery.entity.enums.RoleEnum;
-import uz.tirgo.delivery.repository.RoleRepository;
-import uz.tirgo.delivery.repository.UserRepository;
+import uz.tirgo.delivery.entity.Supplier;
+import uz.tirgo.delivery.repository.SellerRepository;
+import uz.tirgo.delivery.repository.SupplierRepository;
 
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserSevice {
+    private final SupplierRepository supplierRepository;
+    private final SellerRepository sellerRepository;
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-
-    public void addUser(Message message) {
-        Seller seller;
-        if (userRepository.existsByChatId(String.valueOf(message.getChatId()))) {
-            Optional<Seller> byChatId = userRepository.findByChatId(String.valueOf(message.getChatId()));
-            seller = byChatId.get();
-            seller.setLastName(message.getContact().getLastName());
-            seller.setFirstName(message.getContact().getFirstName());
-            seller.setPhoneNumber(message.getContact().getPhoneNumber());
-        } else {
-            seller = new Seller(message);
-        }
-        userRepository.save(seller);
+    public boolean existsById(String id) {
+        return sellerRepository.existsById(Long.valueOf(id));
     }
-
-    public boolean existsByChatId(String chatId) {
-        return userRepository.existsByChatId(chatId);
-    }
-
-    public Seller finByChatId(String chatId) {
-        return userRepository.findByChatId(chatId).get();
-    }
-
-    public String finByChatId(Long userId) {
-        Optional<Seller> byId = userRepository.findById(userId);
-        return byId.get().getChatId();
-    }
-
 
     public Seller finById(Long supplierId) {
-        Optional<Seller> byId = userRepository.findById(supplierId);
+        Optional<Seller> byId = sellerRepository.findById(supplierId);
         return byId.get();
     }
 
-    public void addUser(Message message, Boolean language) {
+    public Supplier finBySupplierId(Long supplierId) {
+        Optional<Supplier> byId = supplierRepository.findById(supplierId);
+        return byId.get();
+    }
+
+    public void saveSeller(Message message) {
         Seller seller = new Seller(message);
-        Optional<Role> byName = roleRepository.findByName(RoleEnum.CUSTOMER);
-        seller.setRoles(byName.get());
-        seller.setLanguage(language ? Language.RUS : Language.UZB);
-        userRepository.save(seller);
-    }
-
-    public void editUser(Message message, boolean language) {
-        Optional<Seller> byChatId = userRepository.findByChatId(String.valueOf(message.getChatId()));
-        Seller seller = byChatId.get();
-        seller.setLanguage(language ? Language.RUS : Language.UZB);
-        userRepository.save(seller);
-    }
-
-    public void editUser(Long chatId, Contact contact) {
-        Optional<Seller> byChatId = userRepository.findByChatId(String.valueOf(chatId));
-        Seller seller = byChatId.get();
-        seller.setLastName(contact.getLastName());
-        seller.setFirstName(contact.getFirstName());
-        seller.setPhoneNumber(contact.getPhoneNumber());
-        userRepository.save(seller);
-    }
-
-    public boolean getLanguage(Long chatId) {
-        Optional<Seller> byChatId = userRepository.findByChatId(String.valueOf(chatId));
-        Seller seller = byChatId.get();
-        return seller.getLanguage().equals(Language.RUS);
+        sellerRepository.save(seller);
     }
 }

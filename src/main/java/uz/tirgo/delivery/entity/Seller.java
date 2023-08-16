@@ -17,13 +17,9 @@ import uz.tirgo.delivery.entity.enums.Language;
 public class Seller {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String username;
-
-    @Column(unique = true)
-    private String chatId;
     private String firstName;
 
     private String lastName;
@@ -43,8 +39,8 @@ public class Seller {
     private boolean credentialsNonExpired = true;
 
     public Seller(Message message) {
+        this.id = message.getChatId();
         this.username = message.getFrom().getUserName();
-        this.chatId = String.valueOf(message.getChatId());
         if (message.getContact() != null) {
             this.firstName = message.getContact().getFirstName();
             this.lastName = message.getContact().getLastName();

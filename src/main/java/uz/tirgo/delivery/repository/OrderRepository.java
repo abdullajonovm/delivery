@@ -8,20 +8,15 @@ import uz.tirgo.delivery.entity.enums.OrderStatus;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findAllByCustomerChatId(String customer_chatId);
-    Optional<Order> findBySupplierChatId(String supplier_chatId);
 
-    Optional<Order> findByCustomerChatId(String customer_chatId);
+    List<Order> findAllByCustomerId(Long customer_id);
 
-    Optional<Order> findByCustomerChatIdAndOrderStatus(String customer_chatId, OrderStatus orderStatus);
+    List<Order> findAllByOrderStatusAndCustomerId(OrderStatus orderStatus, Long customer_id);
+
     List<Order> findAllBySupplierIdAndOrderStatus(Long supplier_id, OrderStatus orderStatus);
 
     List<Order> findByOrderStatus(OrderStatus orderStatus);
 
-//    @Query(value = "DELETE FROM orders WHERE customer_id = :customerId and order_status = 'OVERDUE'", nativeQuery = true)
-    void deleteAllByOrderStatusAndCustomerChatId(OrderStatus orderStatus, String customerId);
-
-    List<Order> findAllBySupplierChatId(String valueOf);
+    List<Order> findAllBySupplierId(Long supplier_id);
 }

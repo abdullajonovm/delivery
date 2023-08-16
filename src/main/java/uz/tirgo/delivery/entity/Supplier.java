@@ -13,14 +13,14 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @NoArgsConstructor
 public class Supplier {
     @Id
-    private Long chatId;
+    private Long id;
     private String lastName;
     private String firstName;
     private String phoneNumber;
     private String userName;
 
     public Supplier(Message message) {
-        this.chatId = message.getChatId();
+        this.id = message.getChatId();
         this.lastName = message.getFrom().getLastName();
         this.firstName = message.getFrom().getFirstName();
         this.userName = message.getFrom().getUserName();

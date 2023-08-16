@@ -15,6 +15,8 @@ public class Location {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String name;
+
     @Column(name = "heading")
     private Integer heading;
 
@@ -32,6 +34,10 @@ public class Location {
 
     @Column(name = "proximity_alert_radius")
     private Integer proximityAlertRadius;
+
+    public Location(String text) {
+        this.name = text;
+    }
 
     public Location(org.telegram.telegrambots.meta.api.objects.Location location) {
         this.heading = location.getHeading();

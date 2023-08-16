@@ -18,11 +18,11 @@ public class Order {
     @ManyToOne
     private Seller customer;
 
-    @ManyToOne
-    private Seller supplier;
+//    @ManyToOne
+//    private Seller supplier;
 
     @ManyToOne
-    private Supplier supplier1;
+    private Supplier supplier;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

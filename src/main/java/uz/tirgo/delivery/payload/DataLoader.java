@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import uz.tirgo.delivery.entity.Role;
 import uz.tirgo.delivery.entity.enums.RoleEnum;
 import uz.tirgo.delivery.repository.RoleRepository;
-import uz.tirgo.delivery.repository.UserRepository;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +21,6 @@ public class DataLoader implements CommandLineRunner {
     private String ddl; //create
 
     private final RoleRepository roleRepository;
-    private final UserRepository userRepository;
 
     @Override
     public void run(String... args) throws Exception {

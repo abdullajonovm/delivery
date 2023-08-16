@@ -4,18 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import uz.tirgo.delivery.entity.*;
+import uz.tirgo.delivery.payload.KeyWords;
 import uz.tirgo.delivery.repository.MessageRepository;
-import uz.tirgo.delivery.repository.UserRepository;
+import uz.tirgo.delivery.repository.SellerRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class MessageService {
 
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
+    private final SellerRepository sellerRepository;
 
     private final ContactService contactService;
 
@@ -37,21 +37,16 @@ public class MessageService {
 
 
     public boolean save(Message message, Order order) {
-        String chatId = String.valueOf(message.getChatId());
-        Optional<Seller> byChatId = userRepository.findByChatId(chatId);
         Messages messages = new Messages(order, message);
-        messages.setFrom(byChatId.get());
+        messages.setFrom(sellerRepository.findById(message.getChatId()).get());
         messageRepository.save(messages);
-
         return true;
     }
 
 
     public void save(Message message, Order order, String path) {
-        String chatId = String.valueOf(message.getChatId());
-        Optional<Seller> byChatId = userRepository.findByChatId(chatId);
         Messages messages = new Messages(order, message);
-        messages.setFrom(byChatId.get());
+        messages.setFrom(sellerRepository.findById(message.getChatId()).get());
         messages.setFileURL(path);
         messageRepository.save(messages);
     }
@@ -63,6 +58,7 @@ public class MessageService {
     }
 
     public void addLocation(Message message, Order byChatId, Location location) {
+        KeyWords.lastRequestSeller.put(message.getChatId(), "addLocation(Message message, Order byChatId, Location location)");
         Messages messages = new Messages(byChatId, message);
         messages.setLocation(location);
         messageRepository.save(messages);

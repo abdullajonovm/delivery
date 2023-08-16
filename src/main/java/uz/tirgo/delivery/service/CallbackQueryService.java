@@ -12,11 +12,13 @@ public class CallbackQueryService {
     private final OrderService orderService;
 
     public SendMessage callBackQuery(CallbackQuery callbackQuery) {
-//        if (callbackQuery.getData().startsWith(KeyWords.ACEPTED_ORDER)) {
-//            String substring = callbackQuery.getData().substring(0, KeyWords.ACEPTED_ORDER.length());
-//            Long orderId = Long.valueOf(substring);
-//            orderService.existOrderById(orderId);
-//        }
+        String data = callbackQuery.getData();
+        long orderId;
+        if (data.startsWith("deletOrder/")) {
+            orderId = Long.valueOf(data.replace("deletOrder/", ""));
+            orderService.deletOrder(orderId);
+            return new SendMessage(String.valueOf(callbackQuery.getFrom().getId()), "order deleted");
+        }
         return null;
     }
 }

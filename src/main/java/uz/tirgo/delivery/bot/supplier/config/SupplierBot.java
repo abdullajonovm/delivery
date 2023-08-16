@@ -224,7 +224,7 @@ public class SupplierBot extends TelegramLongPollingBot {
                 newOrder(this.chatId);
             }
             case KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_RUS, KeyWords.CHEKING_COUNTINUE_ORDER_MESSAGE_UZB -> {
-                myBotService.newOrder(message);
+//                myBotService.newOrder(message);
                 newOrder(this.chatId);
             }
             case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> {

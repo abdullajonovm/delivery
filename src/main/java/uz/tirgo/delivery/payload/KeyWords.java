@@ -6,6 +6,7 @@ public interface KeyWords {
 
     HashMap<Long, Boolean> userLanguage = new HashMap<>();
     HashMap<Long, Boolean> customerLanguage = new HashMap<>();
+    HashMap<Long, Boolean> supplierLanguage = new HashMap<>();
     HashMap<Long, String> lastRequestSupplier = new HashMap<>();
     HashMap<Long, String> lastRequestSeller = new HashMap<>();
     String LANGUAGE_RUS = "Русский \uD83C\uDDF7\uD83C\uDDFA",
@@ -26,8 +27,8 @@ public interface KeyWords {
             NEW_ORDER_SUPPLIER_RUS = "Запросить новый заказ",
             NEW_ORDER_RESPONSE_UZB = "Buyurtma ma'lumotlarini kiritishliginigiz mumkin. Barcha ma'lumotlarni kiritib bo'lganinggizdan so'ng «Buyurtmani rasmiylashitirish» tugmasiga bosing",
             NEW_ORDER_RESPONSE_RUS = "Вы можете ввести всю информацию о заказе. После ввода всей информации нажмите на кнопку «Обработка заказа».",
-            CLOSE_ORDER_UZB = "Buyurtmani bekor qilish",
-            CLOSE_ORDER_RUS = "Отмена заказа",
+            CLOSE_ORDER_UZB = "Buyurtmani bekor qilish ❌",
+            CLOSE_ORDER_RUS = "Отмена заказа ❌",
             CLOSE_ORDER_RESPONSE_UZB = "Buyurtma bekor qilindi",
             CLOSE_ORDER_RESPONSE_RUS = "Заказ отменен",
             SAVE_ORDER_UZB = "Buyurtmani rasmiylashitirish 📝",
@@ -62,15 +63,17 @@ public interface KeyWords {
             SUBMIT_LOACTION_UZB = "Lokatsiyangizni yuboring",
             INPUT_SELLER_LOCATION_MESSAGE_RUS = "Ввод в письменной форме ✍️",
             INPUT_SELLER_LOCATION_MESSAGE_UZB = "Yozma shaklda kiritish ✍️",
-            INPUT_SELLER_LOCATION_RUS = "Tugmasini bosing",
-            INPUT_SELLER_LOCATION_UZB = "Нажать на кнопку",
-
+            INPUT_SELLER_LOCATION_RUS = "Нажать на кнопку",
+            INPUT_SELLER_LOCATION_UZB = "Tugmasini bosing",
             MY_IN_PROGRESS_ORDERS_RUS = "Мои активные заказы",
             MY_IN_PROGRESS_ORDERS_UZB = "Mening faol buyurtmalarim",
             MY_TAKING_AWAY_ORDERS_RUS = "Заказы, принятые моим поставщиком",
             MY_TAKING_AWAY_ORDERS_UZB = "Yetkazib beruvchi qabul qilgan buyurtmalarim",
             MY_COMPLETE_ORDERS_RUS = "Мои доставленные заказы",
-            MY_COMPLETE_ORDERS_UZB = "Mening yetkazib berilgan buyurtmalarim";
-
+            MY_COMPLETE_ORDERS_UZB = "Mening yetkazib berilgan buyurtmalarim",
+            CONFIRMATION_LOCATION_RUS = "Подтверждение адреса ✅",
+            CONFIRMATION_LOCATION_UZB = "Manzilni tasdiqlash ✅",
+            REENTER_CONFIRMATION_LOCATION_RUS = "Повторно введите адрес \uD83D\uDD04",
+            REENTER_CONFIRMATION_LOCATION_UZB = "Manzilni boshqatdan kiritish \uD83D\uDD04";
 
 }
