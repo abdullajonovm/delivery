@@ -31,10 +31,10 @@ public class SellerBot extends TelegramLongPollingBot {
     @Autowired
     private MyBotService myBotService;
 
-    private final String USER_NAME = "delivery_m_bot";
-    private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
-    //   private final String USER_NAME = "tirgo_muhammadqodir_bot";
-//    private final String BOT_TOKEN = "6256000891:AAEcDEc3hwesGVQVN-ZPalbYv0QuuFq4XSw";
+    //    private final String USER_NAME = "delivery_m_bot";
+//    private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
+    private final String USER_NAME = "tirgo_muhammadqodir_bot";
+    private final String BOT_TOKEN = "6256000891:AAEcDEc3hwesGVQVN-ZPalbYv0QuuFq4XSw";
     private final String ADD_INFO = "Ma'lumot qo'shildi";
 
     private boolean currentLanguage = false;
@@ -460,8 +460,8 @@ public class SellerBot extends TelegramLongPollingBot {
     private void creteOrder(Message message) {
         if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null || !KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("menu()"))
             return;
-        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "creteOrder(Message message)");
         SendMessage sendMessage = myBotService.chekOrderSize(message);
+        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "creteOrder(Message message)");
         sendMessage(sendMessage);
     }
 
@@ -482,10 +482,23 @@ public class SellerBot extends TelegramLongPollingBot {
 
     // 7) 3)
     private void acceptedLocation(Message message) {
-        if (myBotService.acceptedLocation(message) == null)
+        if (message.getText().equals(KeyWords.REENTER_CONFIRMATION_LOCATION_RUS) || message.getText().equals(KeyWords.REENTER_CONFIRMATION_LOCATION_UZB)) {
+            reEntrLocation(message);
+            return;
+        }
+        SendMessage sendMessage = myBotService.acceptedLocation(message);
+        if (sendMessage == null)
             buyerPoint();
         else
-            sendMessage(myBotService.acceptedLocation(message));
+            sendMessage(sendMessage);
+    }
+
+    // 7) 4)
+    public void reEntrLocation(Message message) {
+        boolean equals = KeyWords.lastRequestSeller.get(message.getChatId()).equals("setSellerPoint(Message message, Location location)");
+        KeyWords.lastRequestSeller.put(message.getChatId(), "creteOrder(Message message)");
+        myBotService.reEntrLocation(message.getChatId());
+        inputPoint(equals);
     }
 
     // 8)

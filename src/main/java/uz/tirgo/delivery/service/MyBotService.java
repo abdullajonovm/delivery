@@ -131,7 +131,7 @@ public class MyBotService {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(chatId));
         if (!userSevice.existsById(chatId)) {
-            sendMessage.setText(this.currentLanguage ? KeyWords.NOT_FOUND_USER_RUS : KeyWords.NOT_FOUND_USER_UZB);
+            sendMessage.setText(currentLanguage ? KeyWords.NOT_FOUND_USER_RUS : KeyWords.NOT_FOUND_USER_UZB);
             return sendMessage;
         }
         orderService.createOrder(chatId);
@@ -185,7 +185,14 @@ public class MyBotService {
     }
 
     public SendMessage locationText() {
-        if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null || !KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("inputSelerPoint()")) {
+        if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null) {
+            return null;
+        }
+        if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("inputSelerPoint()")) {
+            KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "locationTextSeller()");
+        } else if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("buyerPoint()")) {
+            KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "locationTextBuyer()");
+        } else {
             return null;
         }
         SendMessage sendMessage = new SendMessage(chatId, currentLanguage ? "Пожалуйста, введите местоположение полностью и четко\n (проспект Амира Темура, 115)"
@@ -200,14 +207,18 @@ public class MyBotService {
         replyKeyboardMarkup.setResizeKeyboard(true);
 
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "locationText()");
         return sendMessage;
     }
 
     private SendMessage locationText(Message message) {
+
         Location location = new Location(message.getText());
         locationRepository.save(location);
-        KeyWords.lastRequestSeller.put(message.getChatId(), "locationText(Message message)");
+        if (KeyWords.lastRequestSeller.get(message.getChatId()).equals("locationTextBuyer()")) {
+            orderService.setBuyerPoint(message, location);
+        } else {
+            orderService.setSellerPoint(message, location);
+        }
         return confirmationLocation();
     }
 
@@ -221,9 +232,6 @@ public class MyBotService {
                 if (chek) {
                     return null;
                 } else if (text.equals(KeyWords.REENTER_CONFIRMATION_LOCATION_RUS) || text.equals(KeyWords.REENTER_CONFIRMATION_LOCATION_UZB)) {
-                    if (KeyWords.lastRequestSeller.get(message.getChatId()).equals("buyerPoint()")) {
-                        return null;
-                    }
                     confirmationLocation();
                 }
             } else if (KeyWords.lastRequestSeller.get(message.getChatId()).equals("setBuyerPoint(Message message, Location location)")) {
@@ -253,6 +261,22 @@ public class MyBotService {
             }
         }
         return new SendMessage();
+    }
+
+
+    public void reEntrLocation(Long chatId) {
+        for (Order order : orderService.getOrders(chatId, OrderStatus.OVERDUE)) {
+            try {
+                locationRepository.deleteById(order.getSellerPoint().getId());
+            } catch (Exception e) {
+                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
+            }
+            try {
+                locationRepository.deleteById(order.getSellerPoint().getId());
+            } catch (Exception e) {
+                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
+            }
+        }
     }
 
     public SendMessage contact(Message message) {
@@ -302,9 +326,11 @@ public class MyBotService {
 
 
     public SendMessage text(Message message) {
-        if (KeyWords.lastRequestSeller.get(message.getChatId()) != null && KeyWords.lastRequestSeller.get(message.getChatId()).equals("locationText()")) {
+        if (KeyWords.lastRequestSeller.get(message.getChatId()) == null)
+            return null;
+        else if (KeyWords.lastRequestSeller.get(message.getChatId()).startsWith("locationText"))
             return locationText(message);
-        }
+
 //        setCurrentLanguage(message.getChatId());
 
         SendMessage sendMessage = new SendMessage();

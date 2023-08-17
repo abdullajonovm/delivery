@@ -13,7 +13,7 @@ spring:
       mode: always
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   servlet:
     multipart:
       max-file-size: 20MB

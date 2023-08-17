@@ -101,7 +101,7 @@ public class OrderService {
 
     public void setSellerPoint(Message message, Location location) {
         KeyWords.lastRequestSeller.put(message.getChatId(), "setSellerPoint(Message message, Location location)");
-        for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(message.getChatId(), OrderStatus.OVERDUE)) {
+        for (Order order : orderRepository.findAllByOrderStatusAndCustomerId(OrderStatus.OVERDUE, message.getChatId())) {
             order.setSellerPoint(location);
             orderRepository.save(order);
         }
@@ -110,7 +110,7 @@ public class OrderService {
 
     public void setBuyerPoint(Message message, Location location) {
         KeyWords.lastRequestSeller.put(message.getChatId(), "setBuyerPoint(Message message, Location location)");
-        for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(message.getChatId(), OrderStatus.OVERDUE)) {
+        for (Order order : orderRepository.findAllByOrderStatusAndCustomerId(OrderStatus.OVERDUE, message.getChatId())) {
             order.setBuyerPoint(location);
             orderRepository.save(order);
         }
