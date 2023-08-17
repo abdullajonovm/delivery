@@ -27,6 +27,10 @@ public class OrderService {
         return orderRepository.findAllByCustomerId(Long.valueOf(chatId));
     }
 
+    public List<Order> supplierOrders(String supplierId, OrderStatus status) {
+        return orderRepository.findAllBySupplierIdAndOrderStatus(Long.valueOf(supplierId), status);
+    }
+
     public void createOrder(String chatId) {
         Order order = new Order();
         Seller seller = userSevice.finById(Long.valueOf(chatId)); // chat Id bilan Seller olib kelish
@@ -127,5 +131,9 @@ public class OrderService {
     public void deletOrder(long orderId) {
         messageService.deleteMessages(orderId);
         orderRepository.deleteById(orderId);
+    }
+
+    public Order getById(Long id) {
+        return orderRepository.findById(id).get();
     }
 }
