@@ -34,4 +34,7 @@ public class Order {
     @OneToOne
     private Location buyerPoint;
 
+    private Integer createTime;
+    private Integer endedTime;
+
 }

@@ -77,14 +77,14 @@ public class OrderService {
         if (message.getText().equals(KeyWords.DONT_ACCEPTED_ORDER_UZB) || message.getText().equals(KeyWords.DONT_ACCEPTED_ORDER_RUS)) {
             List<Order> bySupplierChatId = orderRepository.findAllBySupplierId(message.getChatId());
             for (Order order : bySupplierChatId) {
-                if (order.getOrderStatus().equals(OrderStatus.IN_PROGRESS) || order.getOrderStatus().equals(OrderStatus.OVERDUE)) {
+                if (order.getOrderStatus().equals(OrderStatus.IN_PROGRESS) || order.getOrderStatus().equals(OrderStatus.OVERDUE) || order.getOrderStatus().equals(OrderStatus.UN_COMPLETED)) {
                     order.setSupplier(null);
                 }
                 orderRepository.save(order);
             }
             return false;
         } else {
-            for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(message.getChatId(), OrderStatus.OVERDUE)) {
+            for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(message.getChatId(), OrderStatus.UN_COMPLETED)) {
                 order.setOrderStatus(OrderStatus.TAKING_AWAY);
                 orderRepository.save(order);
                 break;
@@ -93,10 +93,15 @@ public class OrderService {
         }
     }
 
+
     public List<Order> getOrders(Long chatId, OrderStatus status) {
         List<Order> all = orderRepository.findAllByOrderStatusAndCustomerId(status, chatId);
 
         return all;
+    }
+
+    public List<Order> getOrdersSupplier(Long chatId, OrderStatus status) {
+        return orderRepository.findAllBySupplierIdAndOrderStatus(chatId, status);
     }
 
     public List<Order> getAllOrders(OrderStatus orderStatus) {
@@ -135,5 +140,49 @@ public class OrderService {
 
     public Order getById(Long id) {
         return orderRepository.findById(id).get();
+    }
+
+    public void acceptedSupplierOrder(Long orderId, Supplier supplier) {
+        Optional<Order> byId = orderRepository.findById(orderId);
+        Order order = byId.get();
+        order.setOrderStatus(OrderStatus.UN_COMPLETED);
+        order.setSupplier(supplier);
+        orderRepository.save(order);
+    }
+
+    public void dontAcceptedOrder(String chatId) {
+        for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(Long.valueOf(chatId), OrderStatus.UN_COMPLETED)) {
+            order.setOrderStatus(OrderStatus.IN_PROGRESS);
+            order.setSupplier(null);
+            orderRepository.save(order);
+        }
+    }
+
+    public Order acceptedSupplier(Message message) {
+        if (message.getText().equals(KeyWords.DONT_ACCEPTED_ORDER_UZB) || message.getText().equals(KeyWords.DONT_ACCEPTED_ORDER_RUS)) {
+            List<Order> bySupplierChatId = orderRepository.findAllBySupplierId(message.getChatId());
+            for (Order order : bySupplierChatId) {
+                if (order.getOrderStatus().equals(OrderStatus.IN_PROGRESS) || order.getOrderStatus().equals(OrderStatus.OVERDUE) || order.getOrderStatus().equals(OrderStatus.UN_COMPLETED)) {
+                    order.setSupplier(null);
+                }
+                orderRepository.save(order);
+            }
+            return null;
+        } else {
+            for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(message.getChatId(), OrderStatus.UN_COMPLETED)) {
+                order.setOrderStatus(OrderStatus.TAKING_AWAY);
+                orderRepository.save(order);
+                return order;
+            }
+            return null;
+        }
+    }
+
+
+    public Order complateOrder(Long orderId) {
+        Optional<Order> byId = orderRepository.findById(orderId);
+        Order order = byId.get();
+        order.setOrderStatus(OrderStatus.COMPLETE);
+        return orderRepository.save(order);
     }
 }

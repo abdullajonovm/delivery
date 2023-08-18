@@ -59,6 +59,7 @@ public class SupplierBot extends TelegramLongPollingBot {
             Message message = update.getMessage();
             chatId = String.valueOf(message.getChatId());
             supplierBotService.chatId = chatId;
+            System.out.println("KeyWords.supplierLanguage.get(message.getChatId()) = " + KeyWords.supplierLanguage.get(message.getChatId()));
             currentLanguage = (KeyWords.supplierLanguage.get(message.getChatId()) != null) ? KeyWords.supplierLanguage.get(message.getChatId()) : false;
             supplierBotService.currentLanguage = currentLanguage;
 
@@ -84,20 +85,44 @@ public class SupplierBot extends TelegramLongPollingBot {
         Long orderId = null;
         if (data.startsWith("orderId/")) {
             orderId = Long.valueOf(data.replace("orderId/", ""));
+
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(chatId);
+            SendLocation sendLocation;
+
+            sendLocation = supplierBotService.getSellerLocation(orderId);
+            if (sendLocation.getChatId() != null) {
+                sendMessage.setText((currentLanguage ? "Место загрузки" : "Yuk yuklanadigon joy") + "\n" + sendLocation.getChatId());
+                sendMessage(sendMessage);
+            } else {
+                sendMessage.setText(currentLanguage ? "Место загрузки" : "Yuk yuklanadigon joy");
+                sendMessage(sendMessage);
+                sendLocation.setChatId(chatId);
+                sendMessage(sendLocation);
+            }
+
+            sendLocation = supplierBotService.getBuyerLocation(orderId);
+            if (sendLocation.getChatId() != null) {
+                sendMessage.setText((currentLanguage ? "Место выгрузки" : "Yuk tushiriladigon joy") + "\n" + sendLocation.getChatId());
+                sendMessage(sendMessage);
+            } else {
+                sendMessage.setText(currentLanguage ? "Место выгрузки" : "Yuk tushiriladigon joy");
+                sendLocation.setChatId(chatId);
+                sendMessage(sendMessage);
+                sendMessage(sendLocation);
+            }
+
+            sendMessage(supplierBotService.getMessage(orderId));
+        } else if (data.startsWith("acceptOrder/")) {
+            orderId = Long.valueOf(data.replace("acceptOrder/", ""));
+            SendMessage sendMessage = supplierBotService.accepedOrder(orderId);
+            sendMessage(sendMessage);
+        } else if (data.startsWith("complateOrderId/")) {
+            orderId = Long.valueOf(data.replace("complateOrderId/", ""));
+            SendMessage sendMessage = supplierBotService.complateOrder(orderId);
+            sendMessage(sendMessage);
+            menyu();
         }
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        SendLocation sendLocation;
-
-        sendLocation = supplierBotService.getSellerLocation(orderId);
-        sendMessage.setText(currentLanguage ? "Место загрузки" : "Yuk yuklanadigon joy");
-        sendMessage(sendMessage);
-        sendMessage(sendLocation);
-
-        sendLocation = supplierBotService.getBuyerLocation(orderId);
-        sendMessage.setText(currentLanguage ? "Место выгрузки" : "Yuk tushiriladigon joy");
-        sendMessage(sendMessage);
-        sendMessage(sendLocation);
     }
 
     // 1)
@@ -135,7 +160,7 @@ public class SupplierBot extends TelegramLongPollingBot {
     // 3)
     public void inputContat(Message message) {
         currentLanguage = message.getText().equals(KeyWords.LANGUAGE_RUS);
-        KeyWords.userLanguage.put(message.getChatId(), currentLanguage);
+        KeyWords.supplierLanguage.put(message.getChatId(), currentLanguage);
 
         KeyboardButton keyboardButton = new KeyboardButton();
         keyboardButton.setRequestContact(true);
@@ -171,7 +196,7 @@ public class SupplierBot extends TelegramLongPollingBot {
         KeyboardButton keyboardButton = new KeyboardButton();
 
         KeyboardButton keyboardButton1 = new KeyboardButton();
-        if (this.currentLanguage) {
+        if (currentLanguage) {
             keyboardButton.setText(KeyWords.MY_ORDERS_RUS);
             keyboardButton1.setText(KeyWords.NEW_ORDER_SUPPLIER_RUS);
         } else {
@@ -192,7 +217,7 @@ public class SupplierBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        sendMessage.setText(this.currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
+        sendMessage.setText(currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
         sendMessage(sendMessage);
     }
 
@@ -244,7 +269,10 @@ public class SupplierBot extends TelegramLongPollingBot {
         keyboardButton.setText(currentLanguage ? KeyWords.SUBMIT_LOACTION_RUS : KeyWords.SUBMIT_LOACTION_UZB);
         keyboardRow.add(keyboardButton);
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setReplyMarkup(new ReplyKeyboardMarkup(Collections.singletonList(keyboardRow)));
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(Collections.singletonList(keyboardRow));
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setSelective(true);
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
         sendMessage.setChatId(chatId);
         sendMessage.setText(currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
         sendMessage(sendMessage);
@@ -262,17 +290,11 @@ public class SupplierBot extends TelegramLongPollingBot {
                 sendMessage(sendMessage);
                 return;
             }
-            TreeMap<Location, Double> locationDoubleTreeMap = new TreeMap<>();
-
-            for (Order order : inprogressOrders) {
-                Location sellerPoint = order.getSellerPoint();
-                org.telegram.telegrambots.meta.api.objects.Location location = message.getLocation();
-                if (sellerPoint.getLongitude() != null && sellerPoint.getLatitude() != null) {
-                    double distance = calculateDistance(sellerPoint.getLatitude(), sellerPoint.getLongitude(), location.getLatitude(), location.getLongitude());
-
-                }
+            for (SendMessage order : supplierBotService.getOrders(message)) {
+                sendMessage(order);
             }
         }
+        menyu();
     }
 
 
@@ -298,6 +320,11 @@ public class SupplierBot extends TelegramLongPollingBot {
         String text = message.getText();
 
         switch (text) {
+            case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
+                SendMessage sendMessage = supplierBotService.acceptedSupplierOrder(message);
+                sendMessage(sendMessage);
+                menyu();
+            }
 //            Custmoerning buyurtmalarini ko'rish
             case KeyWords.MY_ORDERS_RUS, KeyWords.MY_ORDERS_UZB -> {
                 myOrders();
@@ -330,26 +357,9 @@ public class SupplierBot extends TelegramLongPollingBot {
             case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> {
                 menyu();
             }
-            case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
-                SendMessage sendMessage = myBotService.acceptedSupplierOrder(message);
-                sendMessage(sendMessage);
-            }
+
             default -> sendMessage(myBotService.text(message));
         }
 
-    }
-
-    public double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        double distance = RADIUS_OF_EARTH * c;
-        return distance;
     }
 }
