@@ -6,6 +6,7 @@ spring:
     url: postgresql://postgres:axjDr1TSnwyrqOuAg4F7@containers-us-west-128.railway.app:6100/railway
     username: postgres
     password: axjDr1TSnwyrqOuAg4F7
+    driver-class-name: org.postgresql.Driver
   profiles:
     active: #activeProfile#
   sql:
