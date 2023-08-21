@@ -1,11 +1,11 @@
 #spring.datasource.url=jdbc:postgresql://localhost:5432/andqxai
 server:
-  port: 9090
+  port: 6100
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/tirgobot
+    url: postgresql://postgres:axjDr1TSnwyrqOuAg4F7@containers-us-west-128.railway.app:6100/railway
     username: postgres
-    password: root123
+    password: axjDr1TSnwyrqOuAg4F7
   profiles:
     active: #activeProfile#
   sql:
@@ -13,7 +13,7 @@ spring:
       mode: always
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   servlet:
     multipart:
       max-file-size: 20MB
