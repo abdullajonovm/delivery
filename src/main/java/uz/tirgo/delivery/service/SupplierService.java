@@ -119,7 +119,7 @@ public class SupplierService {
         sellerBot.sendMessage(sendMessage);
     }
 
-    @Scheduled(fixedRate = 3600000)
+//    @Scheduled(fixedRate = 3600000)
     private void chekingBot() {
         System.out.println("LocalDateTime.now() = " + LocalDateTime.now());
         System.out.println("Bot ishlayabdi");

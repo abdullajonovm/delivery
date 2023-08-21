@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -77,6 +78,9 @@ public class SupplierBot extends TelegramLongPollingBot {
             }
         } else if (update.hasCallbackQuery()) {
             cllbackQuery(update.getCallbackQuery());
+        } else {
+            sendMessage(new SendMessage("1542672167", LocalDateTime.now().toString()));
+
         }
     }
 
