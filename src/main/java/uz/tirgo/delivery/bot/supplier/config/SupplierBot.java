@@ -1,12 +1,8 @@
 package uz.tirgo.delivery.bot.supplier.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
-import org.telegram.telegrambots.meta.api.methods.send.SendContact;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.*;
@@ -15,24 +11,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import uz.tirgo.delivery.bot.supplier.service.SupplierBotService;
-import uz.tirgo.delivery.entity.Location;
 import uz.tirgo.delivery.entity.Order;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
 import uz.tirgo.delivery.payload.KeyWords;
-import uz.tirgo.delivery.service.MyBotService;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class SupplierBot extends TelegramLongPollingBot {
-    public static final double RADIUS_OF_EARTH = 6371.0; // Earth's radius in kilometers
-
-    private final MyBotService myBotService;
     private final SupplierBotService supplierBotService;
     private final String USER_NAME = "delivery_supplier_bot";
     private final String BOT_TOKEN = "6529333260:AAGuB3DUDnNxeGTaveL1JZrvVyhkcIh3df4";
@@ -59,7 +47,7 @@ public class SupplierBot extends TelegramLongPollingBot {
             Message message = update.getMessage();
             chatId = String.valueOf(message.getChatId());
             supplierBotService.chatId = chatId;
-            System.out.println("KeyWords.supplierLanguage.get(message.getChatId()) = " + KeyWords.supplierLanguage.get(message.getChatId()));
+//            System.out.println("KeyWords.supplierLanguage.get(message.getChatId()) = " + KeyWords.supplierLanguage.get(message.getChatId()));
             currentLanguage = (KeyWords.supplierLanguage.get(message.getChatId()) != null) ? KeyWords.supplierLanguage.get(message.getChatId()) : false;
             supplierBotService.currentLanguage = currentLanguage;
 
@@ -77,6 +65,10 @@ public class SupplierBot extends TelegramLongPollingBot {
             }
         } else if (update.hasCallbackQuery()) {
             cllbackQuery(update.getCallbackQuery());
+        } else if (update.hasEditedMessage()) {
+            if (update.getEditedMessage().hasLocation()) {
+                supplierBotService.editSupplierLocation(update.getEditedMessage());
+            }
         }
     }
 
@@ -278,8 +270,6 @@ public class SupplierBot extends TelegramLongPollingBot {
         sendMessage(sendMessage);
     }
 
-    //TODO shuni yozishligim kerak
-
     private void location(Message message) {
         if (KeyWords.lastRequestSupplier.get(message.getChatId()).equals(KeyWords.SUBMIT_LOACTION_UZB) || KeyWords.lastRequestSupplier.get(message.getChatId()).equals(KeyWords.SUBMIT_LOACTION_RUS)) {
             List<Order> inprogressOrders = supplierBotService.getInprogressOrders();
@@ -295,6 +285,22 @@ public class SupplierBot extends TelegramLongPollingBot {
             }
         }
         menyu();
+    }
+
+    public void text(Message message) {
+        String text = message.getText();
+        switch (text) {
+            case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
+                SendMessage sendMessage = supplierBotService.acceptedSupplierOrder(message);
+                sendMessage(sendMessage);
+                menyu();
+            }
+            case KeyWords.MY_ORDERS_RUS, KeyWords.MY_ORDERS_UZB -> myOrders();
+            case KeyWords.SUPPLIER_FINISHED_ORDER_RUS, KeyWords.SUPPLIER_FINISHED_ORDER_UZB, KeyWords.SUPPLIER_INPROGRESS_ORDER_UZB, KeyWords.SUPPLIER_INPROGRESS_ORDER_RUS ->
+                    myOrders(message);
+            case KeyWords.NEW_ORDER_SUPPLIER_UZB, KeyWords.NEW_ORDER_SUPPLIER_RUS -> requestOrder();
+            case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> menyu();
+        }
     }
 
 
@@ -315,51 +321,4 @@ public class SupplierBot extends TelegramLongPollingBot {
     }
 
 
-    public void text(Message message) {
-
-        String text = message.getText();
-
-        switch (text) {
-            case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
-                SendMessage sendMessage = supplierBotService.acceptedSupplierOrder(message);
-                sendMessage(sendMessage);
-                menyu();
-            }
-//            Custmoerning buyurtmalarini ko'rish
-            case KeyWords.MY_ORDERS_RUS, KeyWords.MY_ORDERS_UZB -> {
-                myOrders();
-            }
-            case KeyWords.SUPPLIER_FINISHED_ORDER_RUS, KeyWords.SUPPLIER_FINISHED_ORDER_UZB, KeyWords.SUPPLIER_INPROGRESS_ORDER_UZB, KeyWords.SUPPLIER_INPROGRESS_ORDER_RUS ->
-                    myOrders(message);
-
-            case KeyWords.NEW_ORDER_SUPPLIER_UZB, KeyWords.NEW_ORDER_SUPPLIER_RUS -> requestOrder();
-
-//            Yangi buyurtma yaratish
-            case KeyWords.NEW_ORDER_RUS, KeyWords.NEW_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.chekOrderSize(message);
-                sendMessage(sendMessage);
-            }
-//            Yaratayotgan buyurtmasini bekor qilish
-            case KeyWords.CLOSE_ORDER_RUS, KeyWords.CLOSE_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.closeOrder(message);
-                sendMessage(sendMessage);
-                menyu();
-            }
-            case KeyWords.SAVE_ORDER_RUS, KeyWords.SAVE_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.acceptedOrder(message);
-                sendMessage(sendMessage);
-            }
-            case KeyWords.CONFIRMATION_ORDER_RUS, KeyWords.CONFIRMATION_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.saveOrder(message);
-                sendMessage(sendMessage);
-                menyu();
-            }
-            case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> {
-                menyu();
-            }
-
-            default -> sendMessage(myBotService.text(message));
-        }
-
-    }
 }

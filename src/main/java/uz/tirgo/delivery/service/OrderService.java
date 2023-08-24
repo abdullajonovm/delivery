@@ -1,8 +1,14 @@
 package uz.tirgo.delivery.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import uz.tirgo.delivery.bot.supplier.config.SupplierBot;
 import uz.tirgo.delivery.entity.Location;
 import uz.tirgo.delivery.entity.Order;
 import uz.tirgo.delivery.entity.Seller;
@@ -22,14 +28,6 @@ public class OrderService {
     private final UserSevice userSevice;
 
     private final MessageService messageService;
-
-    public List<Order> myAllOrders(String chatId) {
-        return orderRepository.findAllByCustomerId(Long.valueOf(chatId));
-    }
-
-    public List<Order> supplierOrders(String supplierId, OrderStatus status) {
-        return orderRepository.findAllBySupplierIdAndOrderStatus(Long.valueOf(supplierId), status);
-    }
 
     public void createOrder(String chatId) {
         Order order = new Order();
@@ -51,14 +49,21 @@ public class OrderService {
         for (Order order : orderRepository.findAllByOrderStatusAndCustomerId(OrderStatus.OVERDUE, message.getChatId())) {
             order.setOrderStatus(OrderStatus.IN_PROGRESS);
             orderRepository.save(order);
+
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String requestBody = "{\"key\":\"value\"}";
+            HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:9090/send/" + order.getId(), request, String.class);
+
+            System.out.println("response = " + response);
             return true;
         }
         return false;
-    }
-
-
-    public List<Order> inprogressOrders() {
-        return orderRepository.findByOrderStatus(OrderStatus.IN_PROGRESS);
     }
 
     public Boolean existOrderById(Long orderId) {
@@ -152,8 +157,9 @@ public class OrderService {
 
     public void dontAcceptedOrder(String chatId) {
         for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(Long.valueOf(chatId), OrderStatus.UN_COMPLETED)) {
-            order.setOrderStatus(OrderStatus.IN_PROGRESS);
             order.setSupplier(null);
+            order.setOrderStatus(OrderStatus.IN_PROGRESS);
+            System.out.println("order = " + order);
             orderRepository.save(order);
         }
     }
@@ -163,6 +169,7 @@ public class OrderService {
             List<Order> bySupplierChatId = orderRepository.findAllBySupplierId(message.getChatId());
             for (Order order : bySupplierChatId) {
                 if (order.getOrderStatus().equals(OrderStatus.IN_PROGRESS) || order.getOrderStatus().equals(OrderStatus.OVERDUE) || order.getOrderStatus().equals(OrderStatus.UN_COMPLETED)) {
+                    order.setOrderStatus(OrderStatus.IN_PROGRESS);
                     order.setSupplier(null);
                 }
                 orderRepository.save(order);

@@ -6,6 +6,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/tirgobot
     username: postgres
     password: root123
+    driver-class-name: org.postgresql.Driver
   profiles:
     active: #activeProfile#
   sql:

@@ -13,10 +13,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import uz.tirgo.delivery.entity.Order;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
 import uz.tirgo.delivery.payload.KeyWords;
-import uz.tirgo.delivery.service.MyBotService;
+import uz.tirgo.delivery.bot.customer.service.SellerService;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,7 +31,7 @@ import java.util.List;
 @Service
 public class SellerBot extends TelegramLongPollingBot {
     @Autowired
-    private MyBotService myBotService;
+    private SellerService sellerService;
 
     private final String USER_NAME = "delivery_m_bot";
     private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
@@ -66,20 +65,17 @@ public class SellerBot extends TelegramLongPollingBot {
         System.out.println("date = " + date);
 
         if (update.hasCallbackQuery()) {
-            SendMessage sendMessage = myBotService.callbackQuery(update.getCallbackQuery());
+            SendMessage sendMessage = sellerService.callbackQuery(update.getCallbackQuery());
             sendMessage(sendMessage);
         } else {
             chatId = String.valueOf(message.getChatId());
-            System.out.println("KeyWords.userLanguage.get(message.getChatId()) = " + KeyWords.userLanguage.get(message.getChatId()));
-            System.out.println("KeyWords.userLanguage.get(message.getChatId()) = " + KeyWords.userLanguage.get(message.getChatId()));
-//            myBotService.setCurrentLanguage(message.getChatId());
             if (KeyWords.userLanguage.get(message.getChatId()) != null && KeyWords.userLanguage.get(message.getChatId())) {
                 currentLanguage = true;
             } else {
                 currentLanguage = false;
             }
-            myBotService.currentLanguage = currentLanguage;
-            myBotService.chatId = chatId;
+            sellerService.currentLanguage = currentLanguage;
+            sellerService.chatId = chatId;
             if (message.hasText()) {
 
                 if (message.getText().equals("/start")) {
@@ -115,7 +111,7 @@ public class SellerBot extends TelegramLongPollingBot {
             path = "src/main/resources/files/photos/" + photoSize.getFileUniqueId() + ".jpg";
             uploadFile(fileId, path);
         }
-        myBotService.addPhotos(message, path);
+        sellerService.addPhotos(message, path);
 
 
     }
@@ -130,7 +126,7 @@ public class SellerBot extends TelegramLongPollingBot {
 
             // Form the download URL using the file_path
             String fileUrl = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + filePath;
-            System.out.println(path);
+//            System.out.println(path);
             // Download and save the video
             saveVideoToFile(fileUrl, path);
 
@@ -153,11 +149,11 @@ public class SellerBot extends TelegramLongPollingBot {
             // Form the download URL using the file_path
             String fileUrl = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + filePath;
             String path = "src/main/resources/files/videos/" + video.getFileUniqueId() + ".mp4";
-            System.out.println(path);
+//            System.out.println(path);
             // Download and save the video
             saveVideoToFile(fileUrl, path);
 
-            myBotService.video(message, path);
+            sellerService.video(message, path);
         } catch (TelegramApiException | IOException e) {
             e.printStackTrace();
         }
@@ -174,18 +170,6 @@ public class SellerBot extends TelegramLongPollingBot {
             }
         }
 
-    }
-
-
-    private void sendDocUploadingAFile(Long chatId, java.io.File save, String caption) throws TelegramApiException {
-        InputFile inputFile = new InputFile();
-        inputFile.setMedia(save);
-
-        SendDocument sendDocumentRequest = new SendDocument();
-        sendDocumentRequest.setChatId(String.valueOf(chatId));
-        sendDocumentRequest.setDocument(inputFile);
-        sendDocumentRequest.setCaption(caption);
-        execute(sendDocumentRequest);
     }
 
 
@@ -215,33 +199,27 @@ public class SellerBot extends TelegramLongPollingBot {
                     locationText();
             case KeyWords.CONFIRMATION_LOCATION_RUS, KeyWords.CONFIRMATION_LOCATION_UZB, KeyWords.REENTER_CONFIRMATION_LOCATION_RUS, KeyWords.REENTER_CONFIRMATION_LOCATION_UZB ->
                     acceptedLocation(message);
-//            Yaratayotgan buyurtmasini bekor qilish
             case KeyWords.CLOSE_ORDER_RUS, KeyWords.CLOSE_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.closeOrder(message);
+                SendMessage sendMessage = sellerService.closeOrder(message);
                 sendMessage(sendMessage);
                 menu();
             }
             case KeyWords.SAVE_ORDER_RUS, KeyWords.SAVE_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.acceptedOrder(message);
+                SendMessage sendMessage = sellerService.acceptedOrder(message);
                 sendMessage(sendMessage);
             }
             case KeyWords.CONFIRMATION_ORDER_RUS, KeyWords.CONFIRMATION_ORDER_UZB -> {
-                SendMessage sendMessage = myBotService.saveOrder(message);
+                SendMessage sendMessage = sellerService.saveOrder(message);
                 sendMessage(sendMessage);
                 menu();
             }
-            case KeyWords.GO_BACK_RUS, KeyWords.GO_BACK_UZB -> {
-                newOrder(String.valueOf(message.getChatId()));
-            }
-
-            case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> {
-                menu();
-            }
+            case KeyWords.GO_BACK_RUS, KeyWords.GO_BACK_UZB -> newOrder(String.valueOf(message.getChatId()));
+            case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> menu();
             case KeyWords.ACEPTED_ORDER_RUS, KeyWords.ACEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_UZB, KeyWords.DONT_ACCEPTED_ORDER_RUS -> {
-                SendMessage sendMessage = myBotService.acceptedSupplierOrder(message);
+                SendMessage sendMessage = sellerService.acceptedSupplierOrder(message);
                 sendMessage(sendMessage);
             }
-            default -> sendMessage(myBotService.text(message));
+            default -> sendMessage(sellerService.text(message));
         }
 
     }
@@ -367,7 +345,7 @@ public class SellerBot extends TelegramLongPollingBot {
             return;
         KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "contact(Message message)");
 
-        boolean saveSeller = myBotService.saveUser(message);
+        boolean saveSeller = sellerService.saveUser(message);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         if (saveSeller) {
@@ -452,11 +430,11 @@ public class SellerBot extends TelegramLongPollingBot {
         List<SendMessage> sendMessageList = new ArrayList<>();
         switch (message.getText()) {
             case KeyWords.MY_IN_PROGRESS_ORDERS_RUS, KeyWords.MY_IN_PROGRESS_ORDERS_UZB ->
-                    sendMessageList = myBotService.myOrders(OrderStatus.IN_PROGRESS);
+                    sendMessageList = sellerService.myOrders(OrderStatus.IN_PROGRESS);
             case KeyWords.MY_TAKING_AWAY_ORDERS_RUS, KeyWords.MY_TAKING_AWAY_ORDERS_UZB ->
-                    sendMessageList = myBotService.myOrders(OrderStatus.TAKING_AWAY);
+                    sendMessageList = sellerService.myOrders(OrderStatus.TAKING_AWAY);
             case KeyWords.MY_COMPLETE_ORDERS_RUS, KeyWords.MY_COMPLETE_ORDERS_UZB ->
-                    sendMessageList = myBotService.myOrders(OrderStatus.COMPLETE);
+                    sendMessageList = sellerService.myOrders(OrderStatus.COMPLETE);
         }
         if (sendMessageList.isEmpty())
             sendMessage(new SendMessage(chatId, currentLanguage ? KeyWords.NOT_FOUND_ORDER_RUS : KeyWords.NOT_FOUND_ORDER_UZB));
@@ -468,7 +446,7 @@ public class SellerBot extends TelegramLongPollingBot {
     private void creteOrder(Message message) {
         if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null || !KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("menu()"))
             return;
-        SendMessage sendMessage = myBotService.chekOrderSize(message);
+        SendMessage sendMessage = sellerService.chekOrderSize(message);
         KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "creteOrder(Message message)");
         sendMessage(sendMessage);
     }
@@ -480,12 +458,12 @@ public class SellerBot extends TelegramLongPollingBot {
 
     // 7) 2) locatsiya jo'natsa saqlash
     private void location(Message message) {
-        sendMessage(myBotService.location(message));
+        sendMessage(sellerService.location(message));
     }
 
     // 7) 2) 1) location ni text ko'rinishida yuborish
     private void locationText() {
-        sendMessage(myBotService.locationText());
+        sendMessage(sellerService.locationText());
     }
 
     // 7) 3)
@@ -494,7 +472,7 @@ public class SellerBot extends TelegramLongPollingBot {
             reEntrLocation(message);
             return;
         }
-        SendMessage sendMessage = myBotService.acceptedLocation(message);
+        SendMessage sendMessage = sellerService.acceptedLocation(message);
         if (sendMessage == null)
             buyerPoint();
         else
@@ -505,7 +483,7 @@ public class SellerBot extends TelegramLongPollingBot {
     public void reEntrLocation(Message message) {
         boolean equals = KeyWords.lastRequestSeller.get(message.getChatId()).equals("setSellerPoint(Message message, Location location)");
         KeyWords.lastRequestSeller.put(message.getChatId(), "creteOrder(Message message)");
-        myBotService.reEntrLocation(message.getChatId());
+        sellerService.reEntrLocation(message.getChatId());
         inputPoint(equals);
     }
 
@@ -521,7 +499,7 @@ public class SellerBot extends TelegramLongPollingBot {
             if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null || !KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("creteOrder(Message message)"))
                 return;
             KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "inputSelerPoint()");
-            myBotService.newOrder();
+            sellerService.newOrder();
 
             messageUz = "Yetkazib beruvchi buyurtmani olishi kerak bo'lgan joyni belgilang";
             messageRu = "Укажите место, где поставщик должен забрать заказ";

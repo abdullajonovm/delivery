@@ -8,21 +8,23 @@ import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import uz.tirgo.delivery.bot.customer.config.SellerBot;
 import uz.tirgo.delivery.bot.supplier.config.SupplierBot;
-import uz.tirgo.delivery.entity.Contact;
-import uz.tirgo.delivery.entity.Location;
-import uz.tirgo.delivery.entity.Messages;
-import uz.tirgo.delivery.entity.Seller;
+import uz.tirgo.delivery.entity.*;
 import uz.tirgo.delivery.entity.enums.Language;
 import uz.tirgo.delivery.payload.KeyWords;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class SupplierService {
     private final OrderService orderService;
     private final MessageService messageService;
     private final SupplierBot supplierBot;
+    private final LocationService locationService;
 
     private Boolean language;
 
@@ -40,7 +43,7 @@ public class SupplierService {
         var order = orderService.existOrderById(orderId);
         Seller seller = userSevice.finById(supplierId);
 
-       language = KeyWords.supplierLanguage.get(supplierId) != null && KeyWords.supplierLanguage.get(supplierId);
+        language = KeyWords.supplierLanguage.get(supplierId) != null && KeyWords.supplierLanguage.get(supplierId);
 
         String supplierChatId = String.valueOf(supplierId);
 
@@ -119,7 +122,8 @@ public class SupplierService {
         sellerBot.sendMessage(sendMessage);
     }
 
-    @Scheduled(fixedRate = 3600000)
+
+    //    @Scheduled(fixedRate = 3600000)
     private void chekingBot() {
         System.out.println("LocalDateTime.now() = " + LocalDateTime.now());
         System.out.println("Bot ishlayabdi");
@@ -127,6 +131,41 @@ public class SupplierService {
         sendMessage.setChatId("1542672167");
         sendMessage.setText("Bot ishlab turibdi");
         sellerBot.sendMessage(sendMessage);
+        supplierBot.sendMessage(sendMessage);
+    }
+
+    public void sendOrder(Long orderId) {
+        Order order = orderService.getById(orderId);
+        if (order.getSellerPoint().getLongitude() == null)
+            return;
+        Supplier supplier = locationService.getNearestSupplier(order.getSellerPoint());
+        System.out.println("supplier = " + supplier);
+        language = KeyWords.supplierLanguage.get(supplier.getId());
+        SendMessage sendMessage = new SendMessage();
+        String text = language ? "Заказ ид:" + order.getId() + "\nИмя Клиента: " + order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName() + ",\n Телефон заказчика: " + order.getCustomer().getPhoneNumber()
+                : "Buyurtma id:" + order.getId() + "\nBu yurtmachining ismi: " + order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName() + ",\n Buyurtmachining telefon raqami: " + order.getCustomer().getPhoneNumber() + "\n";
+        for (Messages message : messageService.getMessages(order.getId())) {
+            if (message.getText() != null) {
+                text = text + "\n" + message.getText();
+            }
+        }
+        sendMessage.setChatId(String.valueOf(supplier.getId()));
+        sendMessage.setText(text);
+        List<List<InlineKeyboardButton>> inlieniKeybord = new ArrayList<>();
+        if (order.getSellerPoint().getName() != null) {
+            sendMessage.setText(text + "\n" + (language ? "Адрес: " : "Manzil: ") + order.getSellerPoint().getName());
+        } else {
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText(language ? "Посмотреть местоположение" : "Joylashuvni ko'rish");
+            button.setCallbackData("orderId/" + order.getId());
+            inlieniKeybord.add(Collections.singletonList(button));
+        }
+        InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton();
+        inlineKeyboardButton1.setText(language ? "Принятие груза" : "Yukni qabul qilish");
+        inlineKeyboardButton1.setCallbackData("acceptOrder/" + order.getId());
+        inlieniKeybord.add(Collections.singletonList(inlineKeyboardButton1));
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(inlieniKeybord);
+        sendMessage.setReplyMarkup(inlineKeyboardMarkup);
         supplierBot.sendMessage(sendMessage);
     }
 }
