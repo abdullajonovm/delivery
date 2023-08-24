@@ -1,11 +1,9 @@
 package uz.tirgo.delivery.bot.supplier.service;
 
 import lombok.RequiredArgsConstructor;
-import org.checkerframework.checker.units.qual.K;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -126,7 +124,7 @@ public class SupplierBotService {
                 Location sellerPoint = inprogressOrder.getSellerPoint();
                 if (sellerPoint.getLongitude() != null && sellerPoint.getLatitude() != null) {
                     double distance = calculateDistance(sellerPoint.getLatitude(), sellerPoint.getLongitude(), message.getLocation().getLatitude(), message.getLocation().getLongitude());
-                    System.out.println("distance = " + distance);
+//                    System.out.println("distance = " + distance);
                     if (distance > 5)
                         continue;
                     if (distance > min1) {
@@ -297,5 +295,13 @@ public class SupplierBotService {
         sendMessage.setChatId(String.valueOf(supplier.getId()));
         sendMessage.setText(currentLanguage ? "Id: " + order.getId() + " Ваш заказ успешно выполнен." : "Id: " + order.getId() + " buyurtmangiz muvaffaqiyatli yakunlandi");
         return sendMessage;
+    }
+
+    public void editSupplierLocation(Message editedMessage) {
+        Location location = new Location(editedMessage.getLocation(), editedMessage.getEditDate());
+//        System.out.println("editedMessage.getLocation() = " + editedMessage.getLocation());
+//        System.out.println("1.KeyWords.userLocation.get(editedMessage.getChatId()) = " + KeyWords.supplierLocation.get(editedMessage.getChatId()));
+        KeyWords.supplierLocation.put(editedMessage.getChatId(), location);
+//        System.out.println("2.KeyWords.userLocation.get(editedMessage.getChatId()) = " + KeyWords.supplierLocation.get(editedMessage.getChatId()));
     }
 }

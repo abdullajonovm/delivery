@@ -1,15 +1,18 @@
 package uz.tirgo.delivery.payload;
 
+import uz.tirgo.delivery.entity.Location;
+
 import java.util.HashMap;
 
-public interface KeyWords {
+public class KeyWords {
 
-    HashMap<Long, Boolean> userLanguage = new HashMap<>();
-    HashMap<Long, Boolean> customerLanguage = new HashMap<>();
-    HashMap<Long, Boolean> supplierLanguage = new HashMap<>();
-    HashMap<Long, String> lastRequestSupplier = new HashMap<>();
-    HashMap<Long, String> lastRequestSeller = new HashMap<>();
-    String LANGUAGE_RUS = "Русский \uD83C\uDDF7\uD83C\uDDFA",
+    public static final HashMap<Long, Location> supplierLocation = new HashMap<>();
+    public static final HashMap<Long, Boolean> userLanguage = new HashMap<>();
+    public static final HashMap<Long, Boolean> customerLanguage = new HashMap<>();
+    public static final HashMap<Long, Boolean> supplierLanguage = new HashMap<>();
+    public static final HashMap<Long, String> lastRequestSupplier = new HashMap<>();
+    public static final HashMap<Long, String> lastRequestSeller = new HashMap<>();
+    public static final String LANGUAGE_RUS = "Русский \uD83C\uDDF7\uD83C\uDDFA",
             LANGUAGE_UZB = "O'zbekcha \uD83C\uDDFA\uD83C\uDDFF",
             CONTACT_INPUT_UZB = "Telefon raqamingizni kiriting ☎️",
             CONTACT_INPUT_RUS = "Введите свой номер телефона ☎️",

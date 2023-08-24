@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-
     List<Order> findAllByCustomerId(Long customer_id);
 
     List<Order> findAllByOrderStatusAndCustomerId(OrderStatus orderStatus, Long customer_id);

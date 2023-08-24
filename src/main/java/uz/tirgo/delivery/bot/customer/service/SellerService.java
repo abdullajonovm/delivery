@@ -1,8 +1,7 @@
-package uz.tirgo.delivery.service;
+package uz.tirgo.delivery.bot.customer.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendContact;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -12,19 +11,22 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import uz.tirgo.delivery.entity.*;
-import uz.tirgo.delivery.entity.enums.Language;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
+import uz.tirgo.delivery.payload.Ketmon;
 import uz.tirgo.delivery.payload.KeyWords;
 import uz.tirgo.delivery.repository.LocationRepository;
+import uz.tirgo.delivery.service.CallbackQueryService;
+import uz.tirgo.delivery.service.MessageService;
+import uz.tirgo.delivery.service.OrderService;
+import uz.tirgo.delivery.service.UserSevice;
 
-import javax.management.openmbean.KeyAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MyBotService {
+public class SellerService {
 
     private final CallbackQueryService callbackQueryService;
 
@@ -102,8 +104,6 @@ public class MyBotService {
     }
 
     public SendMessage chekOrderSize(Message message) {
-//        setCurrentLanguage(message.getChatId());
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setText(currentLanguage ? KeyWords.Warning_ORDER_RUS : KeyWords.Warning_ORDER_UZB);
@@ -126,8 +126,6 @@ public class MyBotService {
     }
 
     public SendMessage newOrder() {
-//        setCurrentLanguage(message.getChatId());
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(chatId));
         if (!userSevice.existsById(chatId)) {
@@ -269,7 +267,7 @@ public class MyBotService {
             try {
                 locationRepository.deleteById(order.getSellerPoint().getId());
             } catch (Exception e) {
-                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
+//                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
             }
             try {
                 locationRepository.deleteById(order.getSellerPoint().getId());
@@ -279,59 +277,11 @@ public class MyBotService {
         }
     }
 
-    public SendMessage contact(Message message) {
-//        setCurrentLanguage(message.getChatId());
-        Order order = orderService.findOverdueOrder(message.getChatId());
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(String.valueOf(message.getChatId()));
-        messageService.saveContact(message, order);
-        sendMessage.setText(this.currentLanguage ? KeyWords.ADD_INFO_RUS : KeyWords.ADD_INFO_UZB);
-        return sendMessage;
-    }
-
-    public List<SendMessage> myAllOrders(Message message) {
-        List<SendMessage> sendMessageList = new ArrayList<>();
-        for (Order order : orderService.myAllOrders(chatId)) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            String text = "";
-            Supplier supplier = order.getSupplier();
-            if (this.currentLanguage) {
-                text = text + "Заказ ид:" + order.getId() + ", заказ статус:" + order.getOrderStatus() + "\n";
-                if (supplier != null && order.getOrderStatus().equals(OrderStatus.TAKING_AWAY)) {
-                    text = text + "Номер доставки заказа <<" + supplier.getPhoneNumber() + ">>, имя " + supplier.getLastName() + "\n";
-                } else {
-                    text = text + "Ваш заказ в настоящее время не связан с поставщиком\n";
-                }
-            } else {
-                text = text + "Buyurtma id:" + order.getId() + ", buyurtma holati:" + order.getOrderStatus() + "\n";
-                if (supplier != null && order.getOrderStatus().equals(OrderStatus.TAKING_AWAY)) {
-                    text = text + "Buyurtma yetkazib beruvchi telefon raqami <<" + supplier.getPhoneNumber() + ">>, ismi " + supplier.getLastName() + "\n";
-                } else {
-                    text = text + "Sizning buyurtmangiz hozircha yetkazib beruvchi bilan biriktirilmagan";
-                }
-            }
-
-            for (Messages messages : messageService.getMessages(order.getId())) {
-                if (message.getText() != null) {
-                    text = text + "\n" + messages.getText();
-                }
-            }
-            sendMessage.setText(text);
-            sendMessageList.add(sendMessage);
-        }
-
-        return sendMessageList;
-    }
-
-
     public SendMessage text(Message message) {
         if (KeyWords.lastRequestSeller.get(message.getChatId()) == null)
             return null;
         else if (KeyWords.lastRequestSeller.get(message.getChatId()).startsWith("locationText"))
             return locationText(message);
-
-//        setCurrentLanguage(message.getChatId());
 
         SendMessage sendMessage = new SendMessage();
         String chatId = String.valueOf(message.getChatId());
@@ -353,7 +303,6 @@ public class MyBotService {
 
 
     public SendMessage closeOrder(Message message) {
-//        setCurrentLanguage(message.getChatId());
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         orderService.deletOverdueOrder(message.getChatId());
@@ -362,8 +311,6 @@ public class MyBotService {
     }
 
     public SendMessage saveOrder(Message message) {
-//        setCurrentLanguage(message.getChatId());
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
 
@@ -396,8 +343,6 @@ public class MyBotService {
     }
 
     public SendMessage acceptedOrder(Message message) {
-//        setCurrentLanguage(message.getChatId());
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setText(this.currentLanguage ? KeyWords.SELECT_MESSAGE_RUS : KeyWords.SELECT_MESSAGE_UZB);
@@ -421,8 +366,6 @@ public class MyBotService {
 
 
     public SendMessage acceptedSupplierOrder(Message message) {
-//        setCurrentLanguage(message.getChatId());
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         if (orderService.acceptedSupplierOrder(message)) {
@@ -431,10 +374,6 @@ public class MyBotService {
             sendMessage.setText(this.currentLanguage ? "Заказ Вам не был отправлен. Будьте более активны" : "Buyurtma sizga yo'naltirilmadi. Ilimos faolroq bo'ling");
         }
         return sendMessage;
-    }
-
-    public void setCurrentLanguage(Long chatId) {
-        currentLanguage = KeyWords.userLanguage.get(chatId) != null ? KeyWords.userLanguage.get(chatId) : false;
     }
 
 
