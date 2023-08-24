@@ -22,8 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.Time;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -31,10 +34,10 @@ public class SellerBot extends TelegramLongPollingBot {
     @Autowired
     private MyBotService myBotService;
 
-    //    private final String USER_NAME = "delivery_m_bot";
-//    private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
-    private final String USER_NAME = "tirgo_muhammadqodir_bot";
-    private final String BOT_TOKEN = "6256000891:AAEcDEc3hwesGVQVN-ZPalbYv0QuuFq4XSw";
+    private final String USER_NAME = "delivery_m_bot";
+    private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
+    //    private final String USER_NAME = "tirgo_muhammadqodir_bot";
+//    private final String BOT_TOKEN = "6256000891:AAEcDEc3hwesGVQVN-ZPalbYv0QuuFq4XSw";
     private final String ADD_INFO = "Ma'lumot qo'shildi";
 
     private boolean currentLanguage = false;
@@ -57,6 +60,11 @@ public class SellerBot extends TelegramLongPollingBot {
         KeyWords.lastRequestSeller.forEach((key, value) -> System.out.println("id:" + key + "   value: " + value));
 
         Message message = update.getMessage();
+
+        System.out.println("message.getDate() = " + message.getDate());
+        Date date = new Date(message.getDate() * 1000L);
+        System.out.println("date = " + date);
+
         if (update.hasCallbackQuery()) {
             SendMessage sendMessage = myBotService.callbackQuery(update.getCallbackQuery());
             sendMessage(sendMessage);
