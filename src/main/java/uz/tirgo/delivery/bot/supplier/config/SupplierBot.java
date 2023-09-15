@@ -119,8 +119,20 @@ public class SupplierBot extends TelegramLongPollingBot {
 
     // 1)
     public void start(Message message) {
-        sendMessage(new SendMessage(this.chatId, "Assalomu alaykum botimizga hush kelibsiz"));
-        sendMessage(new SendMessage(this.chatId, "Привет и добро пожаловать в наш бот"));
+        sendMessage(new SendMessage(this.chatId, "Assalomu alaykum, botimizga hush kelibsiz) \n" +
+                "Bizning tariflarimiz: \n" +
+                "0-5km -> 10.000 so'm\n" +
+                "5-10km -> 15.000 so'm\n" +
+                "10-15km -> 20.000 so'm\n" +
+                "15-25km -> 30.000 so'm\n" +
+                "25-30km -> 40.000 so'm"));
+        sendMessage(new SendMessage(this.chatId, "Здравствуйте и добро пожаловать в наш бот)\n" +
+                "Наши тарифы:\n" +
+                "0-5km -> 10.000 сум\n" +
+                "5-10km -> 15.000 сум\n" +
+                "10-15km -> 20.000 сум\n" +
+                "15-25km -> 30.000 сум\n" +
+                "25-30km -> 40.000 сум"));
         supplierBotService.start(message);
         selectLanguage();
         KeyWords.lastRequestSupplier.put(Long.valueOf(chatId), "start(Message message)");

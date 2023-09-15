@@ -49,7 +49,7 @@ public class SupplierBotService {
         List<Order> orders = orderService.getOrdersSupplier(Long.valueOf(chatId), status);
         List<SendMessage> sendMessageList = new ArrayList<>();
         if (orders.isEmpty() || orders == null)
-            return Collections.singletonList(new SendMessage(chatId, currentLanguage ? "В настоящее время у вас нет доставленных заказов" : "Hozirda sizning yetkazib berilgan buyurtmalaringiz mavjud emas"));
+            return Collections.singletonList(new SendMessage(chatId, currentLanguage ? "У вас нет заказов" : "Buyurtmalaringiz mavjud emas"));
         for (Order order : orders) {
             SendMessage sendMessage = new SendMessage();
             String text = currentLanguage ? "Заказ ид:" + order.getId() + "\nИмя Клиента: " + order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName() + ",\n Телефон заказчика: " + order.getCustomer().getPhoneNumber()

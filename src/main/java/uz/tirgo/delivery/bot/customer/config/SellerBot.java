@@ -501,13 +501,13 @@ public class SellerBot extends TelegramLongPollingBot {
             KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "inputSelerPoint()");
             sellerService.newOrder();
 
-            messageUz = "Yetkazib beruvchi buyurtmani olishi kerak bo'lgan joyni belgilang";
-            messageRu = "Укажите место, где поставщик должен забрать заказ";
+            messageUz = "Yuk qayerdan olib ketiladi?";
+            messageRu = "Откуда забрать?";
         } else {
             KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "buyerPoint()");
 
-            messageUz = "Buyurtmani qabul qilib oluvchining manzilini kiriting";
-            messageRu = "Введите адрес получателя заказа";
+            messageUz = "Qayerga yetkaziladi?";
+            messageRu = "Куда доставить?";
         }
 
         KeyboardButton keyboardButton = new KeyboardButton(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_MESSAGE_RUS : KeyWords.INPUT_SELLER_LOCATION_MESSAGE_UZB);

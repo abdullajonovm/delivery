@@ -194,7 +194,7 @@ public class SellerService {
             return null;
         }
         SendMessage sendMessage = new SendMessage(chatId, currentLanguage ? "Пожалуйста, введите местоположение полностью и четко\n (проспект Амира Темура, 115)"
-                : "Iltimos, manzilingizni to'liq va aniq kiriting\n (Amir Temur shoh ko'chasi, 115)");
+                : "Iltimos, manzilni to'liq va aniq kiriting\n (Amir Temur shoh ko'chasi, 115)");
 
         KeyboardButton keyboardButton = new KeyboardButton(currentLanguage ? KeyWords.CLOSE_ORDER_RUS : KeyWords.CLOSE_ORDER_UZB);
         KeyboardRow keyboardRow = new KeyboardRow();
