@@ -272,7 +272,7 @@ public class SellerService {
             try {
                 locationRepository.deleteById(order.getSellerPoint().getId());
             } catch (Exception e) {
-                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
+//                System.out.println("Exception reEntrLocation(Long chatId): " + chatId);
             }
         }
     }

@@ -56,13 +56,13 @@ public class SellerBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        KeyWords.lastRequestSeller.forEach((key, value) -> System.out.println("id:" + key + "   value: " + value));
+//        KeyWords.lastRequestSeller.forEach((key, value) -> System.out.println("id:" + key + "   value: " + value));
 
         Message message = update.getMessage();
 
-        System.out.println("message.getDate() = " + message.getDate());
+//        System.out.println("message.getDate() = " + message.getDate());
         Date date = new Date(message.getDate() * 1000L);
-        System.out.println("date = " + date);
+//        System.out.println("date = " + date);
 
         if (update.hasCallbackQuery()) {
             SendMessage sendMessage = sellerService.callbackQuery(update.getCallbackQuery());

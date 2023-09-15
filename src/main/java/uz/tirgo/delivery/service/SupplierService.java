@@ -125,8 +125,8 @@ public class SupplierService {
 
     //    @Scheduled(fixedRate = 3600000)
     private void chekingBot() {
-        System.out.println("LocalDateTime.now() = " + LocalDateTime.now());
-        System.out.println("Bot ishlayabdi");
+//        System.out.println("LocalDateTime.now() = " + LocalDateTime.now());
+//        System.out.println("Bot ishlayabdi");
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("1542672167");
         sendMessage.setText("Bot ishlab turibdi");
@@ -139,7 +139,7 @@ public class SupplierService {
         if (order.getSellerPoint().getLongitude() == null)
             return;
         Supplier supplier = locationService.getNearestSupplier(order.getSellerPoint());
-        System.out.println("supplier = " + supplier);
+//        System.out.println("supplier = " + supplier);
         language = KeyWords.supplierLanguage.get(supplier.getId());
         SendMessage sendMessage = new SendMessage();
         String text = language ? "Заказ ид:" + order.getId() + "\nИмя Клиента: " + order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName() + ",\n Телефон заказчика: " + order.getCustomer().getPhoneNumber()

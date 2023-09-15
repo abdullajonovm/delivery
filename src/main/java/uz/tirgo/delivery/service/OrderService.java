@@ -60,7 +60,7 @@ public class OrderService {
 
             ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:9090/send/" + order.getId(), request, String.class);
 
-            System.out.println("response = " + response);
+//            System.out.println("response = " + response);
             return true;
         }
         return false;
@@ -159,7 +159,7 @@ public class OrderService {
         for (Order order : orderRepository.findAllBySupplierIdAndOrderStatus(Long.valueOf(chatId), OrderStatus.UN_COMPLETED)) {
             order.setSupplier(null);
             order.setOrderStatus(OrderStatus.IN_PROGRESS);
-            System.out.println("order = " + order);
+//            System.out.println("order = " + order);
             orderRepository.save(order);
         }
     }
