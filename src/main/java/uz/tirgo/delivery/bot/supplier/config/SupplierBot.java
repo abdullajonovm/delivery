@@ -22,10 +22,11 @@ import java.util.*;
 @RequiredArgsConstructor
 public class SupplierBot extends TelegramLongPollingBot {
     private final SupplierBotService supplierBotService;
+    //    private final String USER_NAME = "delivery_supplier_test_bot";
+//    private final String BOT_TOKEN = "6606301905:AAGGT4_H40u52CtL13R2VDvzqSedRSIHo5o";
+//
     private final String USER_NAME = "delivery_supplier_bot";
     private final String BOT_TOKEN = "6529333260:AAGuB3DUDnNxeGTaveL1JZrvVyhkcIh3df4";
-    //    private final String USER_NAME = "m_tirgo_bot";
-//    private final String BOT_TOKEN = "5947355802:AAHnbh6ZWwQAO8qYJb6IJ1BcWaa7azD3eqg";
     private boolean currentLanguage = false;
 
     private String chatId = "";

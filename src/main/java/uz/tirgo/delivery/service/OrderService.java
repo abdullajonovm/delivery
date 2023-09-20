@@ -57,8 +57,9 @@ public class OrderService {
 
             String requestBody = "{\"key\":\"value\"}";
             HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:9090/send/" + order.getId(), request, String.class);
+            String url = "https://delivery-production-9961.up.railway.app/send/";
+//            String url = "http://localhost:9090/send/";
+            ResponseEntity<String> response = restTemplate.postForEntity(url + order.getId(), request, String.class);
 
 //            System.out.println("response = " + response);
             return true;

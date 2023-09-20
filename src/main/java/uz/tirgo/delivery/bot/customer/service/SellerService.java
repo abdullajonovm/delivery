@@ -2,6 +2,7 @@ package uz.tirgo.delivery.bot.customer.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendContact;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -23,6 +24,8 @@ import uz.tirgo.delivery.service.UserSevice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static uz.tirgo.delivery.test.Test.calculateDistance;
 
 @Service
 @RequiredArgsConstructor
@@ -353,11 +356,22 @@ public class SellerService {
         KeyboardButton keyboardButton1 = new KeyboardButton();
         keyboardButton1.setText(this.currentLanguage ? KeyWords.GO_BACK_RUS : KeyWords.GO_BACK_UZB);
 
+        KeyboardButton keyboardButton2 = new KeyboardButton();
+        keyboardButton2.setText(this.currentLanguage ? KeyWords.CLOSE_ORDER_RUS : KeyWords.CLOSE_ORDER_UZB);
+
+
         KeyboardRow keyboardRow = new KeyboardRow();
         keyboardRow.add(keyboardButton);
         keyboardRow.add(keyboardButton1);
 
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(Collections.singletonList(keyboardRow));
+        KeyboardRow keyboardRow1 = new KeyboardRow();
+        keyboardRow1.add(keyboardButton2);
+
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        keyboardRows.add(keyboardRow);
+        keyboardRows.add(keyboardRow1);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(keyboardRows);
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
         replyKeyboardMarkup.setResizeKeyboard(true);
 
@@ -377,4 +391,36 @@ public class SellerService {
     }
 
 
+    public SendMessage calculetePrice(Message message) {
+        Order order = orderService.findOverdueOrder(message.getChatId());
+        Location sellerPoint = order.getSellerPoint();
+        Location buyerPoint = order.getBuyerPoint();
+        double distance = calculateDistance(sellerPoint, buyerPoint), price = 0;
+        if (distance <= 5) {
+            price = 10000;
+        } else if (distance <= 10) {
+            price = 15000;
+        } else if (distance <= 15) {
+            price = 20000;
+        } else if (distance <= 25) {
+            price = 30000;
+        } else if (distance <= 30)
+            price = 40000;
+        return new SendMessage(chatId, currentLanguage ? "Стоимость доставки " + price + " сум" : "Yetakzib berish narxi " + price + " so'm");
+    }
+
+    private double calculateDistance(Location sellerPoint, Location buyerPoint) {
+        double lat1 = sellerPoint.getLatitude(), lon1 = sellerPoint.getLongitude(), lat2 = buyerPoint.getLatitude(), lon2 = buyerPoint.getLongitude();
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        double distance = 6371.0 * c;
+        return distance;
+    }
 }

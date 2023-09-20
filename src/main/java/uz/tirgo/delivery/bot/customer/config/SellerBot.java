@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
-import org.telegram.telegrambots.meta.api.methods.send.SendContact;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
-import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
@@ -33,10 +30,11 @@ public class SellerBot extends TelegramLongPollingBot {
     @Autowired
     private SellerService sellerService;
 
+    //    private final String USER_NAME = "delivery_customer_bot";
+//    private final String BOT_TOKEN = "6488104556:AAFbKt2CiNqhSqTYDkwiwA33Q-RofZiLflA";
+//
     private final String USER_NAME = "delivery_m_bot";
     private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
-    //    private final String USER_NAME = "tirgo_muhammadqodir_bot";
-//    private final String BOT_TOKEN = "6256000891:AAEcDEc3hwesGVQVN-ZPalbYv0QuuFq4XSw";
     private final String ADD_INFO = "Ma'lumot qo'shildi";
 
     private boolean currentLanguage = false;
@@ -61,7 +59,7 @@ public class SellerBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
 
 //        System.out.println("message.getDate() = " + message.getDate());
-        Date date = new Date(message.getDate() * 1000L);
+//        Date date = new Date(message.getDate() * 1000L);
 //        System.out.println("date = " + date);
 
         if (update.hasCallbackQuery()) {
@@ -205,6 +203,7 @@ public class SellerBot extends TelegramLongPollingBot {
                 menu();
             }
             case KeyWords.SAVE_ORDER_RUS, KeyWords.SAVE_ORDER_UZB -> {
+                sendMessage(sellerService.calculetePrice(message));
                 SendMessage sendMessage = sellerService.acceptedOrder(message);
                 sendMessage(sendMessage);
             }
@@ -278,8 +277,20 @@ public class SellerBot extends TelegramLongPollingBot {
     // 1) /start bosilganda
     public void start(Message message) {
         KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "start(Message message)");
-        sendMessage(new SendMessage(String.valueOf(message.getChatId()), "Assalomu alaykum botimizga hush kelibsiz"));
-        sendMessage(new SendMessage(String.valueOf(message.getChatId()), "Привет и добро пожаловать в наш бот"));
+        sendMessage(new SendMessage(this.chatId, "Assalomu alaykum, botimizga hush kelibsiz) \n" +
+                "Bizning tariflarimiz: \n" +
+                "0-5km -> 10.000 so'm\n" +
+                "5-10km -> 15.000 so'm\n" +
+                "10-15km -> 20.000 so'm\n" +
+                "15-25km -> 30.000 so'm\n" +
+                "25-30km -> 40.000 so'm"));
+        sendMessage(new SendMessage(this.chatId, "Здравствуйте и добро пожаловать в наш бот)\n" +
+                "Наши тарифы:\n" +
+                "0-5km -> 10.000 сум\n" +
+                "5-10km -> 15.000 сум\n" +
+                "10-15km -> 20.000 сум\n" +
+                "15-25km -> 30.000 сум\n" +
+                "25-30km -> 40.000 сум"));
         selectLanguage(message);
     }
 
@@ -494,6 +505,7 @@ public class SellerBot extends TelegramLongPollingBot {
 
     // {7, 8}
     public void inputPoint(boolean chek) {
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
         String messageUz, messageRu;
         if (chek) {
             if (KeyWords.lastRequestSeller.get(Long.valueOf(chatId)) == null || !KeyWords.lastRequestSeller.get(Long.valueOf(chatId)).equals("creteOrder(Message message)"))
@@ -503,30 +515,23 @@ public class SellerBot extends TelegramLongPollingBot {
 
             messageUz = "Yuk qayerdan olib ketiladi?";
             messageRu = "Откуда забрать?";
+            KeyboardButton keyboardButton1 = new KeyboardButton(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_RUS : KeyWords.INPUT_SELLER_LOCATION_UZB);
+            keyboardButton1.setRequestLocation(true);
+            KeyboardRow keyboardRow1 = new KeyboardRow();
+            keyboardRow1.add(keyboardButton1);
+            keyboardRows.add(keyboardRow1);
         } else {
             KeyWords.lastRequestSeller.put(Long.valueOf(chatId), "buyerPoint()");
-
             messageUz = "Qayerga yetkaziladi?";
             messageRu = "Куда доставить?";
         }
 
-        KeyboardButton keyboardButton = new KeyboardButton(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_MESSAGE_RUS : KeyWords.INPUT_SELLER_LOCATION_MESSAGE_UZB);
-
-        KeyboardButton keyboardButton1 = new KeyboardButton(currentLanguage ? KeyWords.INPUT_SELLER_LOCATION_RUS : KeyWords.INPUT_SELLER_LOCATION_UZB);
-        keyboardButton1.setRequestLocation(true);
 
         KeyboardButton keyboardButton2 = new KeyboardButton(currentLanguage ? KeyWords.CLOSE_ORDER_RUS : KeyWords.CLOSE_ORDER_UZB);
-        KeyboardRow keyboardRow = new KeyboardRow();
-        KeyboardRow keyboardRow1 = new KeyboardRow();
         KeyboardRow keyboardRow2 = new KeyboardRow();
 
-        keyboardRow.add(keyboardButton);
-        keyboardRow1.add(keyboardButton1);
         keyboardRow2.add(keyboardButton2);
 
-        List<KeyboardRow> keyboardRows = new ArrayList<>();
-        keyboardRows.add(keyboardRow);
-        keyboardRows.add(keyboardRow1);
         keyboardRows.add(keyboardRow2);
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -538,6 +543,21 @@ public class SellerBot extends TelegramLongPollingBot {
         sendMessage.setChatId(chatId);
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
         sendMessage(sendMessage);
+        SendVideo sendVideo = new SendVideo();
+        File file = new File();
+//        sendVideo.setVideo(new InputFile(new java.io.File("src/main/resources/video/video_2023-09-20_15-17-18.mp4")));
+        sendVideo.setVideo(new InputFile("https://t.me/haisudhaihsdiuhsadiuh/2"));
+        sendVideo.setChatId(chatId);
+        sendVideo.setCaption(currentLanguage ? "Чтобы отправить адрес, вы можете отметить его на карте или переслать местоположение, отправленное в Telegram" : "Manzilni yuborishlik uchun xaritadan beligilashligingiz yoki telegram orqali yuborilgan lokatsiyani forward qilishligingiz mumkin");
+        sendMessage(sendVideo);
+    }
+
+    private void sendMessage(SendVideo sendVideo) {
+        try {
+            execute(sendVideo);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
