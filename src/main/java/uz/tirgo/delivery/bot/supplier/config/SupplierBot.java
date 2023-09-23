@@ -22,10 +22,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class SupplierBot extends TelegramLongPollingBot {
     private final SupplierBotService supplierBotService;
-    //    private final String USER_NAME = "delivery_supplier_test_bot";
+//    private final String USER_NAME = "delivery_supplier_test_bot";
 //    private final String BOT_TOKEN = "6606301905:AAGGT4_H40u52CtL13R2VDvzqSedRSIHo5o";
 //
-    private final String USER_NAME = "delivery_supplier_bot";
+        private final String USER_NAME = "delivery_supplier_bot";
     private final String BOT_TOKEN = "6529333260:AAGuB3DUDnNxeGTaveL1JZrvVyhkcIh3df4";
     private boolean currentLanguage = false;
 
@@ -68,7 +68,13 @@ public class SupplierBot extends TelegramLongPollingBot {
             cllbackQuery(update.getCallbackQuery());
         } else if (update.hasEditedMessage()) {
             if (update.getEditedMessage().hasLocation()) {
-                supplierBotService.editSupplierLocation(update.getEditedMessage());
+                SendMessage sendMessage = supplierBotService.editSupplierLocation(update.getEditedMessage());
+                if (sendMessage != null) {
+                    sendMessage(sendMessage);
+                    this.chatId = String.valueOf(update.getEditedMessage().getChatId());
+                    this.currentLanguage = KeyWords.supplierLanguage.get(update.getEditedMessage().getChatId()) != null && KeyWords.supplierLanguage.get(update.getEditedMessage().getChatId());
+                    menyu();
+                }
             }
         }
     }
@@ -209,15 +215,27 @@ public class SupplierBot extends TelegramLongPollingBot {
             keyboardButton1.setText(KeyWords.NEW_ORDER_SUPPLIER_UZB);
         }
 
-
         KeyboardRow keyboardRow = new KeyboardRow();
         keyboardRow.add(keyboardButton);
         keyboardRow.add(keyboardButton1);
 
+        KeyboardButton button = new KeyboardButton();
+        if (KeyWords.supplierLocation.get(Long.valueOf(chatId)) != null) {
+            button.setText(currentLanguage ? KeyWords.END_WORK_RUS : KeyWords.END_WORK_UZB);
+        } else {
+            button.setText(currentLanguage ? KeyWords.START_WORK_RUS : KeyWords.START_WORK_UZB);
+        }
+        KeyboardRow row = new KeyboardRow();
+        row.add(button);
+        List<KeyboardRow> rowList = new ArrayList<>();
+        rowList.add(keyboardRow);
+        rowList.add(row);
+
+
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setSelective(true);
-        replyKeyboardMarkup.setKeyboard(Collections.singletonList(keyboardRow));
+        replyKeyboardMarkup.setKeyboard(rowList);
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -296,6 +314,16 @@ public class SupplierBot extends TelegramLongPollingBot {
             for (SendMessage order : supplierBotService.getOrders(message)) {
                 sendMessage(order);
             }
+        } else if (KeyWords.lastRequestSupplier.get(message.getChatId()).equals("startWork()")) {
+            Location location = message.getLocation();
+            Integer livePeriod = location.getLivePeriod();
+            if (livePeriod == null || livePeriod < 8 * 3600 - 1) {
+                sendMessage(new SendMessage(chatId, currentLanguage ? "Пожалуйста, отправьте повторно" : "Iltimos boshqatdan yuboring"));
+            } else {
+                KeyWords.supplierLocation.put(message.getChatId(), new uz.tirgo.delivery.entity.Location(location));
+                sendMessage(new SendMessage(chatId, currentLanguage ? "Ваше местоположение получено. Если вы прервете трансляцию вашего местоположения или если ваше местоположение не будет получено в течение 15 минут, вы автоматически перейдете в статус «Отдыхает»."
+                        : "Joylashuvingiz qabul qilindi. Agar siz joylashuvingiz haqidagi translyatsiyani to'xtatsangiz yoki joylashuvingiz 15 daqiqa ichida qabul qilinmasa, siz avtomatik ravishda \"Dam olish\" holatiga o'tasiz."));
+            }
         }
         menyu();
     }
@@ -313,7 +341,34 @@ public class SupplierBot extends TelegramLongPollingBot {
                     myOrders(message);
             case KeyWords.NEW_ORDER_SUPPLIER_UZB, KeyWords.NEW_ORDER_SUPPLIER_RUS -> requestOrder();
             case KeyWords.CHEKING_STOP_ORDER_MESSAGE_RUS, KeyWords.CHEKING_STOP_ORDER_MESSAGE_UZB -> menyu();
+            case KeyWords.START_WORK_RUS, KeyWords.START_WORK_UZB -> startWork();
+            case KeyWords.END_WORK_RUS, KeyWords.END_WORK_UZB -> endWork();
         }
+    }
+
+    private void endWork() {
+        sendMessage(new SendMessage(chatId, currentLanguage ? """
+                Вы вошли в режим «отдых».
+                                
+                Пожалуйста, отключите трансляцию вашего местоположения !!!
+                """
+                : """ 
+                Siz "dam olish" xolatiga o'tdingiz.
+                                
+                Iltimos joylashuvingiz haqidagi translyatsiyani o'chirib qo'ying !!!"""));
+        KeyWords.supplierLocation.remove(Long.valueOf(chatId));
+    }
+
+    private void startWork() {
+        KeyWords.lastRequestSupplier.put(Long.valueOf(chatId), "startWork()");
+        sendMessage(new SendMessage(chatId, currentLanguage ? """
+                В меню геолокации нажмите «транслировать мою геопозицию».
+
+                Пожалуйста, выберите время трансляции 8 часов !!!"""
+                : """
+                Geolokatsiya menyusida "joylashuvimni translyatsiya qilish" tugmasini bosing.
+
+                Iltimos, 8 soatlik translyatsiya vaqtini tanlang !!!"""));
     }
 
 

@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import uz.tirgo.delivery.entity.Location;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
 import uz.tirgo.delivery.payload.KeyWords;
 import uz.tirgo.delivery.bot.customer.service.SellerService;
@@ -30,9 +31,9 @@ public class SellerBot extends TelegramLongPollingBot {
     @Autowired
     private SellerService sellerService;
 
-    //    private final String USER_NAME = "delivery_customer_bot";
+//        private final String USER_NAME = "delivery_customer_bot";
 //    private final String BOT_TOKEN = "6488104556:AAFbKt2CiNqhSqTYDkwiwA33Q-RofZiLflA";
-//
+
     private final String USER_NAME = "delivery_m_bot";
     private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
     private final String ADD_INFO = "Ma'lumot qo'shildi";
@@ -376,6 +377,7 @@ public class SellerBot extends TelegramLongPollingBot {
         KeyboardButton keyboardButton = new KeyboardButton();
 
         KeyboardButton keyboardButton1 = new KeyboardButton();
+
         if (currentLanguage) {
             keyboardButton.setText(KeyWords.MY_ORDERS_RUS);
             keyboardButton1.setText(KeyWords.NEW_ORDER_RUS);

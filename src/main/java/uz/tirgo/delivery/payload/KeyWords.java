@@ -79,6 +79,9 @@ public class KeyWords {
             CONFIRMATION_LOCATION_RUS = "Подтверждение адреса ✅",
             CONFIRMATION_LOCATION_UZB = "Manzilni tasdiqlash ✅",
             REENTER_CONFIRMATION_LOCATION_RUS = "Повторно введите адрес \uD83D\uDD04",
-            REENTER_CONFIRMATION_LOCATION_UZB = "Manzilni boshqatdan kiritish \uD83D\uDD04";
-
+            REENTER_CONFIRMATION_LOCATION_UZB = "Manzilni boshqatdan kiritish \uD83D\uDD04",
+            START_WORK_RUS = "Работать",
+            START_WORK_UZB = "Ishlash",
+            END_WORK_RUS = "Отдыхать",
+            END_WORK_UZB = "Damolish";
 }

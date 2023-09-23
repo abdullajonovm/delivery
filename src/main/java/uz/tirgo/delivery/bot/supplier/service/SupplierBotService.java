@@ -297,11 +297,20 @@ public class SupplierBotService {
         return sendMessage;
     }
 
-    public void editSupplierLocation(Message editedMessage) {
-        Location location = new Location(editedMessage.getLocation(), editedMessage.getEditDate());
-//        System.out.println("editedMessage.getLocation() = " + editedMessage.getLocation());
-//        System.out.println("1.KeyWords.userLocation.get(editedMessage.getChatId()) = " + KeyWords.supplierLocation.get(editedMessage.getChatId()));
-        KeyWords.supplierLocation.put(editedMessage.getChatId(), location);
-//        System.out.println("2.KeyWords.userLocation.get(editedMessage.getChatId()) = " + KeyWords.supplierLocation.get(editedMessage.getChatId()));
+    public SendMessage editSupplierLocation(Message editedMessage) {
+        Long chatId = editedMessage.getChatId();
+        if (KeyWords.supplierLocation.get(chatId) == null) {
+            Boolean language = KeyWords.supplierLanguage.get(chatId) != null && KeyWords.supplierLanguage.get(chatId);
+
+            return new SendMessage(String.valueOf(chatId), language ? """
+                    Пожалуйста, отключите трансляцию вашего местоположения !!!
+                    """
+                    : """ 
+                    Iltimos joylashuvingiz haqidagi translyatsiyani o'chirib qo'ying !!!""");
+        } else {
+            Location location = new Location(editedMessage.getLocation(), editedMessage.getEditDate());
+            KeyWords.supplierLocation.put(chatId, location);
+            return null;
+        }
     }
 }
