@@ -10,7 +10,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import uz.tirgo.delivery.entity.Location;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
 import uz.tirgo.delivery.payload.KeyWords;
 import uz.tirgo.delivery.bot.customer.service.SellerService;
@@ -19,11 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.sql.Time;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -34,8 +30,8 @@ public class SellerBot extends TelegramLongPollingBot {
 //        private final String USER_NAME = "delivery_customer_bot";
 //    private final String BOT_TOKEN = "6488104556:AAFbKt2CiNqhSqTYDkwiwA33Q-RofZiLflA";
 
-    private final String USER_NAME = "delivery_m_bot";
-    private final String BOT_TOKEN = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
+    public String userName;
+    public String botToken;
     private final String ADD_INFO = "Ma'lumot qo'shildi";
 
     private boolean currentLanguage = false;
@@ -44,12 +40,12 @@ public class SellerBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return this.USER_NAME;
+        return this.userName;
     }
 
     @Override
     public String getBotToken() {
-        return this.BOT_TOKEN;
+        return this.botToken;
     }
 
     @Override
@@ -99,20 +95,10 @@ public class SellerBot extends TelegramLongPollingBot {
 
 
     private void photo(Message message) {
-
-        String path = "";
-        for (PhotoSize photoSize : message.getPhoto()) {
-            String fileId1 = photoSize.getFileUniqueId();
-            if (fileId1.lastIndexOf("-") != fileId1.length() - 1)
-                continue;
-
-            String fileId = photoSize.getFileId();
-            path = "src/main/resources/files/photos/" + photoSize.getFileUniqueId() + ".jpg";
-            uploadFile(fileId, path);
-        }
+        String fileId = message.getPhoto().get(message.getPhoto().size() - 1).getFileId(); // Eng katta rasm
+        String path = "src/main/resources/files/photos/" + fileId + ".jpg";
+        uploadFile(fileId, path);
         sellerService.addPhotos(message, path);
-
-
     }
 
     public void uploadFile(String fileId, String path) {
@@ -124,7 +110,7 @@ public class SellerBot extends TelegramLongPollingBot {
             String filePath = file.getFilePath();
 
             // Form the download URL using the file_path
-            String fileUrl = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + filePath;
+            String fileUrl = "https://api.telegram.org/file/bot" + botToken + "/" + filePath;
 //            System.out.println(path);
             // Download and save the video
             saveVideoToFile(fileUrl, path);
@@ -146,7 +132,7 @@ public class SellerBot extends TelegramLongPollingBot {
             String filePath = file.getFilePath();
 
             // Form the download URL using the file_path
-            String fileUrl = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + filePath;
+            String fileUrl = "https://api.telegram.org/file/bot" + botToken + "/" + filePath;
             String path = "src/main/resources/files/videos/" + video.getFileUniqueId() + ".mp4";
 //            System.out.println(path);
             // Download and save the video

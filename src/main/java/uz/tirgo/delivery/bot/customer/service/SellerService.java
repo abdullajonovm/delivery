@@ -1,6 +1,11 @@
 package uz.tirgo.delivery.bot.customer.service;
 
 import lombok.RequiredArgsConstructor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendContact;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -406,21 +411,78 @@ public class SellerService {
             price = 30000;
         } else if (distance <= 30)
             price = 40000;
-        return new SendMessage(chatId, currentLanguage ? "Стоимость доставки " + price + " сум" : "Yetakzib berish narxi " + price + " so'm");
+        else {
+            return new SendMessage(chatId, currentLanguage ? "Произошла ошибка. Расстояние более чем ограничено " + distance : "Masofa chegaralandan ko'ra ko'proq " + distance);
+        }
+        return new SendMessage(chatId, currentLanguage ? "Стоимость доставки " + price + " сум " + distance + " km" : "Yetakzib berish narxi " + price + " so'm " + distance + " km");
     }
+
+//    private double calculateDistance(Location sellerPoint, Location buyerPoint) {
+//        double lat1 = sellerPoint.getLatitude(), lon1 = sellerPoint.getLongitude(), lat2 = buyerPoint.getLatitude(), lon2 = buyerPoint.getLongitude();
+//        double dLat = Math.toRadians(lat2 - lat1);
+//        double dLon = Math.toRadians(lon2 - lon1);
+//
+//        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+//                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+//
+//        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//
+//        double distance = 6371.0 * c;
+//        return distance;
+//    }
 
     private double calculateDistance(Location sellerPoint, Location buyerPoint) {
         double lat1 = sellerPoint.getLatitude(), lon1 = sellerPoint.getLongitude(), lat2 = buyerPoint.getLatitude(), lon2 = buyerPoint.getLongitude();
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
 
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        String apiKey = "40a208b0-ebe2-4927-9f54-83321489e711"; // Sizning API kalitingiz
+        String apiUrl = "https://graphhopper.com/api/1/matrix?point=" + lat1 + "%2C" + lon1 + "&point=" + lat2 + "%2C" + lon2 + "&type=json&vehicle=bike&debug=true&out_array=distances&key=" + apiKey;
 
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(apiUrl)
+                .build();
+        double closestDistance = Double.MAX_VALUE;
 
-        double distance = 6371.0 * c;
-        return distance;
+        try {
+            Response response = client.newCall(request).execute();
+            String responseBody = response.body().string();
+
+            if (response.isSuccessful()) {
+                JSONObject jsonResponse = new JSONObject(responseBody);
+                JSONArray distancesArray = jsonResponse.getJSONArray("distances");
+                double[][] distancesMatrix = new double[distancesArray.length()][distancesArray.length()];
+
+                // JSON javobdagi masofa matricasini o'qib olamiz
+                for (int i = 0; i < distancesArray.length(); i++) {
+                    JSONArray row = distancesArray.getJSONArray(i);
+                    for (int j = 0; j < row.length(); j++) {
+                        distancesMatrix[i][j] = row.getDouble(j);
+                    }
+                }
+
+                // Eng yaqin masofani topamiz
+                for (int i = 0; i < distancesMatrix.length; i++) {
+                    for (int j = 0; j < distancesMatrix[i].length; j++) {
+                        double distancesMatrix1 = distancesMatrix[i][j];
+                        System.out.println("distancesMatrix1 = " + distancesMatrix1 / 1000.0);
+                        if (i != j && distancesMatrix[i][j] < closestDistance) {
+                            closestDistance = distancesMatrix[i][j];
+                        }
+                    }
+                }
+
+                // Eng yaqin masofani km da chiqaramiz
+                closestDistance = closestDistance / 1000.0;
+
+                System.out.println("Eng yaqin masofa: " + closestDistance + " km");
+            } else {
+                System.out.println("API dan xato javob qaytdi. Xatolikni tekshirib ko'ring.");
+                System.out.println(responseBody);
+            }
+        } catch (Exception e) {
+            System.out.println("Xatolik yuz berdi: " + e.getMessage());
+        }
+        return closestDistance;
     }
 }

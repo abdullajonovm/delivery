@@ -26,6 +26,16 @@ public class BotInit {
         TelegramBotsApi telegramBotsApi1 = new TelegramBotsApi(DefaultBotSession.class);
 
         try {
+            sellerBot.botToken = "6417165435:AAG9mWfwbWMRPJ160BnsLxAzZlq2GbvHGp8";
+            sellerBot.userName = "delivery_m_bot";
+            supplierBot.botToken = "6529333260:AAGuB3DUDnNxeGTaveL1JZrvVyhkcIh3df4";
+            supplierBot.userName = "delivery_supplier_bot";
+/*
+            sellerBot.botToken = "6362180263:AAG2onFzaKljU2rHYwJTIYKA1eK8Iz64HxI";
+            sellerBot.userName = "delivery_customer_test_bot";
+            supplierBot.botToken = "6606301905:AAGGT4_H40u52CtL13R2VDvzqSedRSIHo5o";
+            supplierBot.userName = "delivery_supplier_test_bot";*/
+
             telegramBotsApi1.registerBot(supplierBot);
             telegramBotsApi.registerBot(sellerBot);
         } catch (TelegramApiException e) {

@@ -15,18 +15,17 @@ import uz.tirgo.delivery.entity.Order;
 import uz.tirgo.delivery.entity.enums.OrderStatus;
 import uz.tirgo.delivery.payload.KeyWords;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class SupplierBot extends TelegramLongPollingBot {
     private final SupplierBotService supplierBotService;
-//    private final String USER_NAME = "delivery_supplier_test_bot";
+    //    private final String USER_NAME = "delivery_supplier_test_bot";
 //    private final String BOT_TOKEN = "6606301905:AAGGT4_H40u52CtL13R2VDvzqSedRSIHo5o";
 //
-        private final String USER_NAME = "delivery_supplier_bot";
-    private final String BOT_TOKEN = "6529333260:AAGuB3DUDnNxeGTaveL1JZrvVyhkcIh3df4";
+    public String userName;
+    public String botToken;
     private boolean currentLanguage = false;
 
     private String chatId = "";
@@ -34,12 +33,12 @@ public class SupplierBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return this.USER_NAME;
+        return this.userName;
     }
 
     @Override
     public String getBotToken() {
-        return this.BOT_TOKEN;
+        return this.botToken;
     }
 
     @Override
@@ -309,6 +308,7 @@ public class SupplierBot extends TelegramLongPollingBot {
                 sendMessage.setText(currentLanguage ? "На данный момент нет доступных заказов" : "Hozirda buyurtmalar mavjud emas");
                 sendMessage.setChatId(String.valueOf(message.getChatId()));
                 sendMessage(sendMessage);
+                menyu();
                 return;
             }
             for (SendMessage order : supplierBotService.getOrders(message)) {
